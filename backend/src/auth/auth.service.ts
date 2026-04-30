@@ -45,7 +45,8 @@ export class AuthService {
       relations: ['settings'],
     });
     if (!user) throw new UnauthorizedException();
-    const { password_hash: _ph, ...safe } = user;
+    const { password_hash, ...safe } = user;
+    void password_hash;
     return safe;
   }
 

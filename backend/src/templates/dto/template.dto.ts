@@ -1,12 +1,4 @@
-import {
-  IsDateString,
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsDateString, IsIn, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 const ITEM_TYPES = ['task', 'meeting', 'event', 'reminder'] as const;
 const PRIORITIES = ['low', 'normal', 'high'] as const;

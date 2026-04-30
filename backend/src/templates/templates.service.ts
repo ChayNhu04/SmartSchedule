@@ -59,9 +59,7 @@ export class TemplatesService {
     if (!t) throw new NotFoundException('Template không tồn tại');
 
     const start = new Date(dto.start_time);
-    const end = t.duration_minutes
-      ? new Date(start.getTime() + t.duration_minutes * 60_000)
-      : null;
+    const end = t.duration_minutes ? new Date(start.getTime() + t.duration_minutes * 60_000) : null;
     const remind = t.default_remind_minutes
       ? new Date(start.getTime() - t.default_remind_minutes * 60_000)
       : null;

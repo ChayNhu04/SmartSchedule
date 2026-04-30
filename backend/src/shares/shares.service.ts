@@ -57,7 +57,12 @@ export class SharesService {
   findSchedulesSharedWith(userId: string): Promise<Schedule[]> {
     return this.schedules
       .createQueryBuilder('s')
-      .innerJoin('schedule_shares', 'ss', 'ss.schedule_id = s.id AND ss.shared_with_user_id = :userId', { userId })
+      .innerJoin(
+        'schedule_shares',
+        'ss',
+        'ss.schedule_id = s.id AND ss.shared_with_user_id = :userId',
+        { userId },
+      )
       .leftJoinAndSelect('s.user', 'owner')
       .orderBy('s.start_time', 'ASC')
       .getMany();
