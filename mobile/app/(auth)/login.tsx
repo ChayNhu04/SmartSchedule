@@ -4,16 +4,24 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { Link, router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import { Input } from "../../components/Input";
+import { Button } from "../../components/Button";
+import { useTheme } from "../../theme/ThemeContext";
+import { radius, spacing, typography } from "../../theme/tokens";
 import { api } from "../../services/api";
 import { useAuthStore } from "../../hooks/useAuthStore";
 
 export default function LoginScreen() {
+  const { colors, scheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,66 +34,93 @@ export default function LoginScreen() {
       const { data } = await api.post("/auth/login", { email, password });
       await setAuth(data.access_token, data.user);
       router.replace("/(tabs)");
-    } catch (err: any) {
-      Alert.alert("Đăng nhập thất bại", err?.response?.data?.message ?? err.message);
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      Alert.alert("Đăng nhập thất bại", e.response?.data?.message ?? e.message ?? "Lỗi");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
-    >
-      <Text style={styles.title}>SmartSchedule</Text>
-      <Text style={styles.subtitle}>Đăng nhập để quản lý lịch của bạn</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, padding: spacing["2xl"], justifyContent: "center" }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.brandRow}>
+            <View style={[styles.logoBox, { backgroundColor: colors.primary }]}>
+              <Ionicons name="sparkles" size={20} color={colors.primaryForeground} />
+            </View>
+            <Text style={[typography.h2, { color: colors.text }]}>SmartSchedule</Text>
+          </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mật khẩu"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      <Pressable style={styles.button} onPress={submit} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? "Đang đăng nhập..." : "Đăng nhập"}</Text>
-      </Pressable>
+          <Text style={[typography.display, { color: colors.text, marginTop: spacing["3xl"] }]}>
+            Chào mừng trở lại
+          </Text>
+          <Text
+            style={[
+              typography.bodyLg,
+              { color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing["2xl"] },
+            ]}
+          >
+            Đăng nhập để tiếp tục quản lý lịch.
+          </Text>
 
-      <Link href="/(auth)/register" style={styles.link}>
-        Chưa có tài khoản? Đăng ký
-      </Link>
-    </KeyboardAvoidingView>
+          <Input
+            label="Email"
+            placeholder="ban@example.com"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            leftIcon={<Ionicons name="mail-outline" size={18} color={colors.textMuted} />}
+          />
+          <Input
+            label="Mật khẩu"
+            placeholder="••••••••"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />}
+          />
+          <View style={{ marginTop: spacing.sm }}>
+            <Button label="Đăng nhập" onPress={submit} loading={loading} size="lg" />
+          </View>
+
+          <Pressable
+            onPress={() => router.push("/(auth)/register")}
+            style={{ marginTop: spacing.xl, alignItems: "center" }}
+          >
+            <Text style={[typography.body, { color: colors.textMuted }]}>
+              Chưa có tài khoản?{" "}
+              <Link href="/(auth)/register" style={{ color: colors.primary, fontWeight: "600" }}>
+                Đăng ký miễn phí
+              </Link>
+            </Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: "center", backgroundColor: "#fff" },
-  title: { fontSize: 32, fontWeight: "700", textAlign: "center" },
-  subtitle: { fontSize: 14, color: "#666", textAlign: "center", marginBottom: 32 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: "#1f6feb",
-    padding: 14,
-    borderRadius: 8,
+  brandRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    gap: spacing.sm,
   },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  link: { marginTop: 16, color: "#1f6feb", textAlign: "center" },
+  logoBox: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

@@ -1,15 +1,28 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Screen } from "../../components/Screen";
+import { Input } from "../../components/Input";
+import { Button } from "../../components/Button";
+import { useTheme } from "../../theme/ThemeContext";
+import { radius, spacing, typography } from "../../theme/tokens";
 import { api } from "../../services/api";
 
+const PRIORITY_OPTIONS = [
+  { value: "low", label: "Thấp", colorKey: "priorityLow" as const },
+  { value: "normal", label: "Vừa", colorKey: "priorityNormal" as const },
+  { value: "high", label: "Cao", colorKey: "priorityHigh" as const },
+] as const;
+
 export default function AddScreen() {
+  const { colors } = useTheme();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [startTime, setStartTime] = useState(""); // ISO string
+  const [startTime, setStartTime] = useState("");
   const [priority, setPriority] = useState<"low" | "normal" | "high">("normal");
+  const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
 
   const submit = async () => {
@@ -17,6 +30,7 @@ export default function AddScreen() {
       Alert.alert("Thiếu thông tin", "Vui lòng nhập tiêu đề và thời gian bắt đầu");
       return;
     }
+    setLoading(true);
     try {
       await api.post("/schedules", { title, description, start_time: startTime, priority });
       qc.invalidateQueries({ queryKey: ["schedules"] });
@@ -25,81 +39,115 @@ export default function AddScreen() {
       setTitle("");
       setDescription("");
       setStartTime("");
-    } catch (err: any) {
-      Alert.alert("Lỗi", err?.response?.data?.message ?? err.message);
+      setPriority("normal");
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      Alert.alert("Lỗi", e.response?.data?.message ?? e.message ?? "Có lỗi xảy ra");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={styles.heading}>Thêm lịch mới</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Tiêu đề *"
+    <Screen title="Thêm lịch" subtitle="Tạo lịch mới cho bạn">
+      <ScrollView contentContainerStyle={{ padding: spacing.lg }}>
+        <Input
+          label="Tiêu đề"
+          placeholder="VD: Họp team product"
           value={title}
           onChangeText={setTitle}
         />
-        <TextInput
-          style={[styles.input, { height: 80 }]}
-          placeholder="Mô tả (tùy chọn)"
+        <Input
+          label="Mô tả"
+          placeholder="Ghi chú thêm (tuỳ chọn)"
           value={description}
           onChangeText={setDescription}
           multiline
+          numberOfLines={3}
+          style={{ minHeight: 80, textAlignVertical: "top" }}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Bắt đầu (ISO 8601, vd 2026-05-01T09:00:00+07:00) *"
+        <Input
+          label="Bắt đầu"
+          placeholder="2026-05-01T09:00:00+07:00"
           value={startTime}
           onChangeText={setStartTime}
           autoCapitalize="none"
+          hint="Định dạng ISO 8601"
         />
-        <Text style={styles.label}>Ưu tiên:</Text>
-        {(["low", "normal", "high"] as const).map((p) => (
-          <Pressable
-            key={p}
-            style={[styles.priorityRow, priority === p && styles.priorityRowActive]}
-            onPress={() => setPriority(p)}
-          >
-            <Text>
-              {p === "low" ? "🟢 Thấp" : p === "normal" ? "🟡 Vừa" : "🔴 Cao"}
-            </Text>
-          </Pressable>
-        ))}
-        <Pressable style={styles.button} onPress={submit}>
-          <Text style={styles.buttonText}>Lưu lịch</Text>
-        </Pressable>
+
+        <Text
+          style={[
+            typography.captionStrong,
+            { color: colors.text, marginBottom: spacing.xs, marginTop: spacing.sm },
+          ]}
+        >
+          Ưu tiên
+        </Text>
+        <View style={styles.priorityRow}>
+          {PRIORITY_OPTIONS.map((opt) => {
+            const active = priority === opt.value;
+            const dotColor = colors[opt.colorKey];
+            return (
+              <Pressable
+                key={opt.value}
+                onPress={() => setPriority(opt.value)}
+                style={[
+                  styles.priorityChip,
+                  {
+                    backgroundColor: active ? colors.primaryMuted : colors.surface,
+                    borderColor: active ? colors.primary : colors.border,
+                  },
+                ]}
+              >
+                <View style={[styles.dot, { backgroundColor: dotColor }]} />
+                <Text
+                  style={[
+                    typography.bodyStrong,
+                    { color: active ? colors.primary : colors.text },
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+                {active && (
+                  <Ionicons
+                    name="checkmark"
+                    size={16}
+                    color={colors.primary}
+                    style={{ marginLeft: 4 }}
+                  />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={{ marginTop: spacing.xl }}>
+          <Button label="Lưu lịch" onPress={submit} loading={loading} size="lg" />
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  heading: { fontSize: 24, fontWeight: "700", marginBottom: 16 },
-  label: { marginTop: 8, marginBottom: 4, fontWeight: "600" },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 16,
-  },
   priorityRow: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    marginBottom: 8,
+    flexDirection: "row",
+    gap: spacing.sm,
   },
-  priorityRowActive: { borderColor: "#1f6feb", backgroundColor: "#eef4ff" },
-  button: {
-    backgroundColor: "#1f6feb",
-    padding: 14,
-    borderRadius: 8,
+  priorityChip: {
+    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 16,
+    justifyContent: "center",
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
   },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
 });

@@ -1,30 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
-import { FlatList, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { FlatList } from "react-native";
 import { ScheduleCard } from "../../components/ScheduleCard";
+import { Screen } from "../../components/Screen";
+import { EmptyState } from "../../components/EmptyState";
+import { ScheduleListSkeleton } from "../../components/Skeleton";
+import { spacing } from "../../theme/tokens";
 import { api } from "../../services/api";
 import type { Schedule } from "../../types/schedule";
 
 export default function UpcomingScreen() {
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["schedules", "upcoming"],
     queryFn: async () => (await api.get<Schedule[]>("/schedules/upcoming?limit=20")).data,
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Sắp tới</Text>
-      <FlatList
-        data={data ?? []}
-        keyExtractor={(s) => String(s.id)}
-        renderItem={({ item }) => <ScheduleCard schedule={item} />}
-        contentContainerStyle={{ padding: 16 }}
-      />
-    </SafeAreaView>
+    <Screen title="Sắp tới" subtitle="20 lịch sắp tới gần nhất">
+      {isLoading ? (
+        <ScheduleListSkeleton count={4} />
+      ) : (
+        <FlatList
+          data={data ?? []}
+          keyExtractor={(s) => String(s.id)}
+          renderItem={({ item }) => <ScheduleCard schedule={item} />}
+          ListEmptyComponent={
+            <EmptyState
+              icon="calendar-outline"
+              title="Chưa có lịch sắp tới"
+              description="Khi bạn thêm lịch trong tương lai, chúng sẽ hiện ở đây."
+            />
+          }
+          contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}
+        />
+      )}
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f7f8" },
-  heading: { fontSize: 24, fontWeight: "700", padding: 16 },
-});
