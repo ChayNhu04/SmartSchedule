@@ -3,7 +3,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -93,17 +92,14 @@ export default function LoginScreen() {
             <Button label="Đăng nhập" onPress={submit} loading={loading} size="lg" />
           </View>
 
-          <Pressable
-            onPress={() => router.push("/(auth)/register")}
-            style={{ marginTop: spacing.xl, alignItems: "center" }}
-          >
+          <View style={{ marginTop: spacing.xl, alignItems: "center" }}>
             <Text style={[typography.body, { color: colors.textMuted }]}>
               Chưa có tài khoản?{" "}
               <Link href="/(auth)/register" style={{ color: colors.primary, fontWeight: "600" }}>
                 Đăng ký miễn phí
               </Link>
             </Text>
-          </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
