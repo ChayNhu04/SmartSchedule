@@ -1,52 +1,44 @@
 # SmartSchedule
 
-Ứng dụng quản lý lịch trình & nhắc nhở thông minh.
+Ứng dụng quản lý lịch trình & nhắc nhở thông minh — **3 client chia sẻ cùng REST API**.
 
-- **Backend**: NestJS + TypeORM + PostgreSQL + JWT + Expo Push Notifications
-- **Mobile**: React Native (Expo) + TypeScript + React Navigation + Zustand
-- **Deploy**: Docker + docker-compose, CI bằng GitHub Actions
+| Service     | Stack                                                                | Deploy             |
+|-------------|----------------------------------------------------------------------|--------------------|
+| **backend** | NestJS · TypeORM · PostgreSQL · JWT · Expo Push                      | Render / Fly / VPS |
+| **web**     | Next.js 15 · Tailwind · shadcn/ui · TanStack Query · FullCalendar    | Vercel             |
+| **mobile**  | React Native (Expo) · Expo Router · Zustand · TanStack Query         | Expo Go / EAS Build|
+| **shared**  | TypeScript types & API contracts dùng chung cho cả 3 client          | (workspace)        |
 
-> Tài liệu đầy đủ về kiến trúc, tính năng, API và quy trình deploy: [`PROJECT.md`](./PROJECT.md)
+> Tài liệu kiến trúc đầy đủ: [`PROJECT.md`](./PROJECT.md)
 
 ---
 
-## Cấu trúc monorepo
+## Cấu trúc monorepo (pnpm workspace)
 
 ```
 SmartSchedule/
-├── backend/                 # NestJS REST API
-│   ├── src/
-│   ├── migrations/
-│   ├── test/
-│   ├── Dockerfile
-│   └── package.json
-├── mobile/                  # Expo (React Native)
-│   ├── app/                 # Expo Router screens
-│   ├── components/
-│   ├── services/            # API client
-│   ├── hooks/
-│   └── package.json
+├── backend/           # NestJS REST API
+├── web/               # Next.js (App Router)
+├── mobile/            # Expo (React Native)
+├── shared/            # @smartschedule/shared — types
 ├── docker-compose.yml
-├── .env.example
+├── pnpm-workspace.yaml
 ├── .github/workflows/ci.yml
-├── README.md
-└── PROJECT.md               # Tài liệu chi tiết
+└── PROJECT.md
 ```
-
----
 
 ## Khởi động nhanh
 
-### 1. Clone & cấu hình
+### Cài chung
 
 ```bash
 git clone https://github.com/ChayNhu04/SmartSchedule.git
 cd SmartSchedule
 cp .env.example .env
-# chỉnh JWT_SECRET, DATABASE_URL nếu cần
+pnpm install                        # cần pnpm 9+
 ```
 
-### 2. Backend (Docker)
+### Backend (Docker — khuyên dùng)
 
 ```bash
 docker compose up -d --build
@@ -55,73 +47,79 @@ docker compose logs -f backend
 # Swagger: http://localhost:3000/api/docs
 ```
 
-### 2b. Backend (chạy local không Docker)
+### Backend (chạy trực tiếp)
 
 ```bash
-cd backend
-npm install
-# Đảm bảo có PostgreSQL chạy ở DATABASE_URL
-npm run start:dev
+pnpm dev:backend                    # nest start --watch
+# Đảm bảo có Postgres ở DATABASE_URL trong .env
 ```
 
-### 3. Mobile (Expo)
+### Web
 
 ```bash
-cd mobile
-npm install
-cp .env.example .env  # set EXPO_PUBLIC_API_URL=http://<IP-máy-bạn>:3000/api
-npx expo start
-```
-
-Dùng Expo Go app trên điện thoại quét QR, hoặc chạy emulator Android/iOS.
-
----
-
-## Lệnh thường dùng
-
-### Backend
-
-```bash
-npm run start:dev      # watch mode
-npm run build          # compile TypeScript
-npm run start:prod     # chạy bản build
-npm run lint
-npm test
-npm run migration:run  # chạy migrations
+cd web
+cp .env.example .env                # set NEXT_PUBLIC_API_URL
+pnpm dev                            # http://localhost:3001 (default 3000 nếu backend không chiếm)
 ```
 
 ### Mobile
 
 ```bash
-npx expo start         # dev server
-npx expo start --tunnel
-eas build -p android   # production build (cần tài khoản Expo)
-eas build -p ios
+cd mobile
+cp .env.example .env                # set EXPO_PUBLIC_API_URL về IP máy backend
+pnpm start                          # Expo dev server, dùng Expo Go quét QR
 ```
 
 ---
 
-## Tính năng chính (tóm tắt)
+## Lệnh chung (root)
 
-- 🔐 Đăng ký / đăng nhập (JWT)
-- 📅 CRUD lịch (task / meeting / event / reminder)
-- 🟢🟡🔴 Mức ưu tiên (low / normal / high)
-- 🔁 Lịch lặp (daily / weekly / monthly + interval + until)
-- 🏷️ Tag/nhãn (many-to-many)
-- 📋 Template lịch
-- 👥 Chia sẻ lịch (view-only)
-- 🔔 Nhắc nhở tự động (cron mỗi phút) + push notification qua Expo
-- ⏰ Khung giờ làm việc — reminder ngoài khung dồn về sáng hôm sau
-- 📥 Import Excel + iCalendar (.ics)
-- 📤 Export iCalendar
-- 🔍 Tìm kiếm + thống kê (completion rate, hot hours, breakdown theo loại / ưu tiên)
-- ↩️ Undo thao tác xoá / hoàn-thành (≤10 phút)
-- 📜 Audit log
-
-Chi tiết từng tính năng + API endpoint xem [`PROJECT.md`](./PROJECT.md).
+```bash
+pnpm typecheck       # typecheck mọi package
+pnpm lint            # lint mọi package
+pnpm build           # build tất cả
+pnpm test            # test tất cả
+```
 
 ---
 
+## Tính năng (tóm tắt)
+
+- 🔐 Đăng ký / đăng nhập (JWT) — chung cho web + mobile
+- 📅 CRUD lịch (task / meeting / event / reminder)
+- 🟢🟡🔴 Mức ưu tiên + 🔁 lịch lặp (daily/weekly/monthly + interval + until)
+- 🏷️ Tag · 📋 Template · 👥 Chia sẻ (view-only)
+- 🔔 Reminder cron mỗi phút + push notification (mobile)
+- 📅 Calendar view (web — FullCalendar)
+- 🔍 Tìm kiếm + 📊 Thống kê
+- 📜 Audit log
+- ⚙️ Cài đặt (timezone, working hours, default remind)
+
+Chi tiết, API spec, deploy guide xem [`PROJECT.md`](./PROJECT.md).
+
+---
+
+## Deploy production (recommended)
+
+```
+   ┌────────────┐       ┌───────────────┐       ┌───────────┐
+   │  web       │──────▶│  backend      │──────▶│  Neon     │
+   │  Vercel    │       │  Render Docker│       │  Postgres │
+   └────────────┘       └───────────────┘       └───────────┘
+                                ▲
+                                │
+                       ┌────────┴────────┐
+                       │   mobile        │
+                       │   Expo Go / EAS │
+                       └─────────────────┘
+```
+
+- **Web**: Vercel detect Next.js, set `NEXT_PUBLIC_API_URL` → deploy.
+- **Backend**: Render / Fly với Dockerfile có sẵn, kết nối Neon Postgres.
+- **Mobile**: `eas build` ra APK / IPA hoặc Expo Go cho dev.
+
+Hướng dẫn từng bước trong [`PROJECT.md` mục Deploy](./PROJECT.md#8-deploy).
+
 ## License
 
-MIT — xem [`LICENSE`](./LICENSE) (sẽ thêm sau).
+MIT

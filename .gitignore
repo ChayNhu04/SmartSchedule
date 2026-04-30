@@ -29,6 +29,14 @@ coverage/
 web-build/
 mobile/.expo/
 
+# Next.js
+.next/
+next-env.d.ts.bak
+out/
+
+# pnpm
+.pnpm-store/
+
 # Native
 android/
 ios/
