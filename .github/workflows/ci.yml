@@ -7,42 +7,67 @@ on:
     branches: [main]
 
 jobs:
-  backend:
-    name: Backend lint + build + test
+  shared:
+    name: Shared types typecheck
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - name: Install dependencies
-        run: npm ci || npm install
-      - name: Lint
-        run: npm run lint --if-present
-      - name: Build
-        run: npm run build
-      - name: Test
-        run: npm test --if-present
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm --filter @smartschedule/shared typecheck
+
+  backend:
+    name: Backend lint + build + test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm --filter smartschedule-backend lint --if-present
+      - run: pnpm --filter smartschedule-backend build
+      - run: pnpm --filter smartschedule-backend test --if-present
+
+  web:
+    name: Web typecheck + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm --filter smartschedule-web typecheck
+      - run: pnpm --filter smartschedule-web build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000/api
 
   mobile:
     name: Mobile typecheck
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./mobile
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - name: Install dependencies
-        run: npm install
-      - name: Typecheck
-        run: npm run typecheck
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm --filter smartschedule-mobile typecheck

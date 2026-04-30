@@ -9,11 +9,13 @@
 
 SmartSchedule là **app quản lý lịch trình & nhắc nhở thông minh**, lấy cảm hứng từ
 [BotThoiGianBieu](https://github.com/dinhvien04/BotThoiGianBieu) (Mezon bot)
-nhưng được tái cấu trúc thành:
+nhưng được tái cấu trúc thành **monorepo 4 package** chia sẻ chung REST API:
 
-- **Backend NestJS** expose REST API thuần (không Mezon, không Discord).
-- **Mobile React Native (Expo)** làm giao diện chính.
-- **Push notification** thay cho channel message của bot — gửi qua Expo Push.
+- **`backend/`** — NestJS expose REST API thuần (không Mezon, không Discord).
+- **`web/`** — Next.js 15 (App Router) + Tailwind + shadcn/ui — giao diện desktop.
+- **`mobile/`** — Expo / React Native — giao diện mobile.
+- **`shared/`** — `@smartschedule/shared` package: TypeScript types & API contracts dùng chung cho cả 3.
+- **Push notification** thay cho channel message của bot — gửi qua Expo Push (mobile).
 
 Đối tượng người dùng: cá nhân muốn quản lý task / meeting / event với reminder
 chủ động, hỗ trợ priority, tag, recurrence, share, template.
@@ -32,12 +34,16 @@ chủ động, hỗ trợ priority, tag, recurrence, share, template.
 | Docs             | `@nestjs/swagger` (OpenAPI tại `/api/docs`)                         |
 | Security         | Helmet, CORS, Throttler                                              |
 | Excel/iCal       | `xlsx`, `ical.js`                                                   |
+| Web              | Next.js 15 (App Router) · React 19 · Tailwind CSS · shadcn/ui (Radix) · FullCalendar |
+| Web state        | Zustand (auth) · TanStack Query (server state)                       |
+| Web auth         | JWT trong `localStorage` (axios interceptor đính Bearer)            |
 | Mobile           | Expo SDK 52 · React Native 0.76 · Expo Router 4 · TypeScript         |
-| State            | Zustand (auth) · TanStack Query (server state)                       |
-| Storage          | AsyncStorage (token persistence)                                     |
-| Notifications    | `expo-notifications` + Expo Push                                     |
+| Mobile state     | Zustand (auth) · TanStack Query (server state)                       |
+| Mobile storage   | AsyncStorage (token persistence)                                     |
+| Mobile notif     | `expo-notifications` + Expo Push                                     |
+| Workspace        | pnpm 9 workspaces (`backend`, `web`, `mobile`, `shared`)             |
 | Container        | Multi-stage Dockerfile (Node 20-alpine), docker-compose              |
-| CI               | GitHub Actions (lint + build + test, typecheck mobile)              |
+| CI               | GitHub Actions (typecheck shared / lint + build + test backend / typecheck + build web / typecheck mobile) |
 
 ---
 
@@ -63,24 +69,47 @@ SmartSchedule/
 │   ├── Dockerfile
 │   ├── tsconfig.json / .build.json / nest-cli.json
 │   └── package.json
-├── mobile/
-│   ├── app/                       # Expo Router (file-based)
-│   │   ├── _layout.tsx            # QueryClient + GestureHandler + SafeArea
-│   │   ├── index.tsx              # gateway → /(auth) hoặc /(tabs)
-│   │   ├── (auth)/                # login / register
-│   │   └── (tabs)/                # today / upcoming / add / search / settings
-│   ├── components/                # ScheduleCard, …
-│   ├── services/                  # api.ts (axios), notifications.ts (Expo Push)
-│   ├── hooks/                     # useAuthStore (Zustand)
-│   ├── types/                     # Schedule, Priority, …
-│   ├── app.json                   # Expo config
-│   ├── babel.config.js
+├── web/                              # Next.js 15 + Tailwind + shadcn/ui
+│   ├── app/
+│   │   ├── layout.tsx                # root + Providers (QueryClient, Toaster)
+│   │   ├── globals.css               # Tailwind + CSS vars (light/dark)
+│   │   ├── page.tsx                  # gateway: /login hoặc /today
+│   │   ├── login/page.tsx · register/page.tsx
+│   │   └── (app)/                    # group có sidebar + auth guard
+│   │       ├── layout.tsx            # AppShell (sidebar nav)
+│   │       ├── today/ upcoming/ overdue/ calendar/ search/
+│   │       └── tags/ templates/ settings/
+│   ├── components/
+│   │   ├── ui/                       # shadcn primitives (Button, Card, Dialog, …)
+│   │   ├── schedule/                 # ScheduleCard / ScheduleFormDialog / ScheduleList
+│   │   └── app-shell.tsx             # sidebar layout
+│   ├── lib/                          # api.ts (axios), utils.ts (cn)
+│   ├── hooks/                        # use-auth.ts (Zustand)
+│   ├── tailwind.config.ts · components.json · next.config.mjs
 │   └── package.json
-├── docker-compose.yml             # postgres + backend
-├── .github/workflows/ci.yml       # lint + build + test + typecheck
+├── mobile/
+│   ├── app/                          # Expo Router (file-based)
+│   │   ├── _layout.tsx               # QueryClient + GestureHandler + SafeArea
+│   │   ├── index.tsx                 # gateway → /(auth) hoặc /(tabs)
+│   │   ├── (auth)/                   # login / register
+│   │   └── (tabs)/                   # today / upcoming / add / search / settings
+│   ├── components/                   # ScheduleCard, …
+│   ├── services/                     # api.ts (axios), notifications.ts (Expo Push)
+│   ├── hooks/                        # useAuthStore (Zustand)
+│   ├── types/                        # re-export từ @smartschedule/shared
+│   ├── app.json · babel.config.js
+│   └── package.json
+├── shared/                           # @smartschedule/shared
+│   ├── src/index.ts                  # types: Schedule, Tag, AuthUser, …
+│   ├── tsconfig.json
+│   └── package.json
+├── docker-compose.yml                # postgres + backend
+├── pnpm-workspace.yaml
+├── package.json                      # workspace root scripts
+├── .github/workflows/ci.yml          # 4 jobs (shared / backend / web / mobile)
 ├── .env.example
 ├── README.md
-├── PROJECT.md                     # ⟵ tài liệu này
+├── PROJECT.md                        # ⟵ tài liệu này
 └── LICENSE
 ```
 
@@ -400,6 +429,68 @@ Backend dùng token này khi cron `RemindersService.tick()` chạy.
 
 ---
 
+## 7b. Web app (Next.js)
+
+### 7b.1 Stack & lý do chọn
+
+| Thành phần          | Công nghệ                              | Lý do |
+|---------------------|----------------------------------------|--------|
+| Framework           | **Next.js 15** (App Router, RSC)        | Server components, file-based routing, edge runtime, deploy 1-click Vercel |
+| UI                  | **Tailwind CSS** + **shadcn/ui** (Radix) | Component primitives accessible, copy-paste → tự do tuỳ biến, theme CSS vars |
+| Calendar            | **FullCalendar** (`@fullcalendar/react`) | Month / week / day view hoàn chỉnh, drag-drop, events |
+| State               | Zustand + TanStack Query                | Trùng pattern với mobile — dễ bảo trì |
+| Auth                | JWT trong `localStorage` + axios interceptor | Tương đồng mobile, không cần NextAuth |
+| Toast               | `sonner`                                | API ngắn gọn, có rới rich colors |
+
+### 7b.2 Routing
+
+```
+app/
+├── layout.tsx                # root: Providers (QueryClient, Toaster)
+├── page.tsx                  # gateway: hydrate auth → /login hoặc /today
+├── login/page.tsx · register/page.tsx
+└── (app)/                    # route group — có sidebar
+    ├── layout.tsx            # AppShell (auth guard + sidebar nav)
+    ├── today/page.tsx        # GET /api/schedules/today
+    ├── upcoming/page.tsx     # GET /api/schedules/upcoming
+    ├── overdue/page.tsx      # GET /api/schedules/overdue
+    ├── calendar/page.tsx     # FullCalendar (month/week/day)
+    ├── search/page.tsx       # GET /api/schedules/search
+    ├── tags/page.tsx         # GET/POST/DELETE /api/tags
+    ├── templates/page.tsx    # GET/POST/DELETE /api/templates + instantiate
+    └── settings/page.tsx     # GET/PATCH /api/users/me/settings
+```
+
+### 7b.3 Layout
+
+`AppShell` (<ref_file file="web/components/app-shell.tsx" /> theo ngữ cảnh repo) chứa:
+- Sidebar 256px bên trái với 8 link nav + email user + nút Đăng xuất.
+- Auth guard: nếu không có token → redirect `/login`.
+- Main content scrollable.
+
+### 7b.4 shadcn/ui primitives
+
+Đã scaffold sẵn: `Button`, `Input`, `Label`, `Textarea`, `Card`, `Badge`, `Dialog`, `Select`, `Switch`. Thêm component mới bằng:
+
+```bash
+cd web
+npx shadcn@latest add <component-name>
+```
+
+### 7b.5 API client + auth
+
+`web/lib/api.ts` — axios instance + request interceptor đính `Authorization: Bearer <token>`. Response 401 → logout + redirect `/login`. Tương đương `mobile/services/api.ts`.
+
+`web/hooks/use-auth.ts` — Zustand store với `token`, `user`, `hydrate()` đọc từ `localStorage`, `setAuth()`, `logout()`.
+
+### 7b.6 Màn hình nổi bật
+
+- **Calendar view**: FullCalendar với 3 view (month/week/day), màu theo priority (xanh/vàng/đỏ), click event → mở dialog edit.
+- **Schedule form dialog**: dialog dùng chung cho create + edit, có datetime-local picker, item type, priority, recurrence.
+- **Templates page**: tạo template + dialog "Instantiate" để clone thành schedule mới.
+
+---
+
 ## 8. Deploy
 
 ### 8.1 Local với docker-compose
@@ -439,7 +530,23 @@ docker compose logs -f backend
 
 > Nginx phía trước → terminate TLS với Let's Encrypt → proxy `localhost:3000`.
 
-### 8.3 Mobile build
+### 8.3 Web (Vercel — khuyến nghị)
+
+1. Vào https://vercel.com/new → Import GitHub repo `SmartSchedule`.
+2. **Root Directory**: `web`.
+3. Framework auto-detect = **Next.js**.
+4. Set environment variable:
+   - `NEXT_PUBLIC_API_URL = https://<backend-domain>/api`
+5. Deploy. Vercel sẽ:
+   - Build lại mỗi khi push vào `main`.
+   - Tạo preview URL cho mỗi PR.
+   - Cấp HTTPS sẵn + Edge CDN toàn cầu.
+
+> Vercel hỗ trợ pnpm workspace tự động — detect `pnpm-workspace.yaml` và cài shared package qua symlink.
+
+Nếu muốn tự host: `pnpm --filter smartschedule-web build` → chạy `pnpm --filter smartschedule-web start` (port 3000) sau Nginx reverse proxy.
+
+### 8.4 Mobile build
 
 ```bash
 cd mobile
@@ -454,12 +561,14 @@ eas build -p ios --profile production
 
 Để Expo Push hoạt động trong production: cần `expo.extra.eas.projectId` trong `app.json` (`eas init` sẽ tự thêm).
 
-### 8.4 CI
+### 8.5 CI
 
-`.github/workflows/ci.yml`:
+`.github/workflows/ci.yml` chạy 4 job song song trên Ubuntu 24.04 + Node 20 + pnpm 9:
 
-- Job **backend**: `npm ci → npm run lint → npm run build → npm test` (working dir `./backend`).
-- Job **mobile**: `npm install → npm run typecheck` (working dir `./mobile`).
+- Job **shared**: `pnpm --filter @smartschedule/shared typecheck`.
+- Job **backend**: `pnpm --filter smartschedule-backend lint + build + test`.
+- Job **web**: `pnpm --filter smartschedule-web typecheck + build`.
+- Job **mobile**: `pnpm --filter smartschedule-mobile typecheck`.
 
 CI chạy trên mọi PR và push vào `main`.
 
@@ -510,7 +619,10 @@ Mẫu file đề xuất (chưa scaffold, nhưng nên thêm sớm):
 - [ ] Quick add tiếng Việt (NLP datetime parser như BotThoiGianBieu)
 - [ ] Calendar month view (mobile)
 - [ ] Đa người trong cùng lịch (collaborative edit)
-- [ ] Web app (Next.js share React Query types)
+- [x] Web app (Next.js + Tailwind + shadcn/ui) — đã scaffold
+- [ ] Web: drag-drop trên Calendar để dời giờ
+- [ ] Web: dark mode toggle
+- [ ] Web: stats charts (Recharts)
 - [ ] Mention / push tới participants khi share
 
 ---
