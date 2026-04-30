@@ -1,22 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search as SearchIcon } from "lucide-react";
+import { Search as SearchIcon, Frown } from "lucide-react";
 import type { Schedule } from "@smartschedule/shared";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/empty-state";
 import { ScheduleCard } from "@/components/schedule/schedule-card";
+import { ScheduleListSkeleton } from "@/components/schedule/schedule-card-skeleton";
 import { api } from "@/lib/api";
 
 export default function SearchPage() {
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
 
-  // simple debounce
-  useState(() => {
+  useEffect(() => {
     const id = setTimeout(() => setDebounced(q), 300);
     return () => clearTimeout(id);
-  });
+  }, [q]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["schedules", "search", debounced],
@@ -28,30 +29,40 @@ export default function SearchPage() {
   });
 
   return (
-    <div className="container space-y-6 py-8">
-      <h1 className="text-3xl font-bold">Tìm kiếm</h1>
+    <div className="container max-w-5xl space-y-6 py-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Tìm kiếm</h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">
+          Tìm theo tiêu đề hoặc mô tả.
+        </p>
+      </div>
+
       <div className="relative max-w-xl">
-        <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Nhập từ khoá (tiêu đề hoặc mô tả)..."
+          placeholder="Nhập từ khoá..."
           value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setDebounced(e.target.value);
-          }}
+          onChange={(e) => setQ(e.target.value)}
         />
       </div>
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
+
+      {isLoading && debounced ? (
+        <ScheduleListSkeleton count={3} />
+      ) : !debounced ? (
+        <EmptyState
+          icon={SearchIcon}
+          title="Nhập từ khoá để tìm"
+          description="Bạn có thể tìm trong tiêu đề và mô tả của lịch."
+        />
       ) : (data?.length ?? 0) === 0 ? (
-        <p className="text-muted-foreground">
-          {debounced ? "Không tìm thấy kết quả nào." : "Nhập từ khoá để tìm."}
-        </p>
+        <EmptyState
+          icon={Frown}
+          title="Không tìm thấy kết quả"
+          description={`Không có lịch nào khớp với "${debounced}".`}
+        />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 animate-fade-in lg:grid-cols-2">
           {data!.map((s) => (
             <ScheduleCard key={s.id} schedule={s} />
           ))}

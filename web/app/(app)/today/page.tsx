@@ -17,7 +17,8 @@ export default function TodayPage() {
       description="Toàn bộ lịch trong ngày hôm nay"
       schedules={data ?? []}
       loading={isLoading}
-      emptyMessage="🎉 Hôm nay không có lịch nào — tận hưởng nhé!"
+      emptyTitle="Hôm nay không có lịch nào"
+      emptyDescription="Một ngày trống — tận hưởng nhé! Thêm lịch nếu cần lập kế hoạch."
     />
   );
 }
