@@ -17,7 +17,9 @@ export default function OverduePage() {
       description="Lịch pending nhưng đã qua thời gian bắt đầu"
       schedules={data ?? []}
       loading={isLoading}
-      emptyMessage="Bạn không có lịch nào quá hạn!"
+      emptyTitle="Không có lịch quá hạn"
+      emptyDescription="Bạn đang theo kịp tiến độ. Tiếp tục phát huy."
+      showAdd={false}
     />
   );
 }

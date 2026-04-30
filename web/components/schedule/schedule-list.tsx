@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, CalendarCheck } from "lucide-react";
 import type { Schedule } from "@smartschedule/shared";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { ScheduleCard } from "./schedule-card";
+import { ScheduleListSkeleton } from "./schedule-card-skeleton";
 import { ScheduleFormDialog } from "./schedule-form-dialog";
 
 interface Props {
@@ -12,7 +14,8 @@ interface Props {
   description?: string;
   schedules: Schedule[];
   loading?: boolean;
-  emptyMessage?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
   showAdd?: boolean;
 }
 
@@ -21,7 +24,8 @@ export function ScheduleList({
   description,
   schedules,
   loading,
-  emptyMessage = "Không có lịch nào.",
+  emptyTitle = "Chưa có lịch nào",
+  emptyDescription = "Thêm lịch đầu tiên để bắt đầu quản lý thời gian.",
   showAdd = true,
 }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -38,14 +42,16 @@ export function ScheduleList({
   };
 
   return (
-    <div className="container space-y-6 py-8">
-      <div className="flex items-center justify-between">
+    <div className="container max-w-5xl space-y-6 py-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">{title}</h1>
-          {description && <p className="text-muted-foreground">{description}</p>}
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{title}</h1>
+          {description && (
+            <p className="mt-1 text-sm text-muted-foreground md:text-base">{description}</p>
+          )}
         </div>
         {showAdd && (
-          <Button onClick={openNew} className="gap-2">
+          <Button onClick={openNew} size="sm" className="gap-1.5">
             <Plus className="h-4 w-4" />
             Thêm lịch
           </Button>
@@ -53,15 +59,23 @@ export function ScheduleList({
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
+        <ScheduleListSkeleton count={4} />
       ) : schedules.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-muted-foreground/30 p-12 text-center">
-          <p className="text-muted-foreground">{emptyMessage}</p>
-        </div>
+        <EmptyState
+          icon={CalendarCheck}
+          title={emptyTitle}
+          description={emptyDescription}
+          action={
+            showAdd && (
+              <Button onClick={openNew} className="gap-1.5">
+                <Plus className="h-4 w-4" />
+                Thêm lịch
+              </Button>
+            )
+          }
+        />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 animate-fade-in lg:grid-cols-2">
           {schedules.map((s) => (
             <ScheduleCard key={s.id} schedule={s} onEdit={openEdit} />
           ))}
