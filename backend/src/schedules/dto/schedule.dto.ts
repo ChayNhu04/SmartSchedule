@@ -23,7 +23,9 @@ export class CreateScheduleDto {
   @IsOptional() @IsDateString() remind_at?: string;
   @IsOptional() @IsIn(ITEM_TYPES as unknown as string[]) item_type?: (typeof ITEM_TYPES)[number];
   @IsOptional() @IsIn(PRIORITIES as unknown as string[]) priority?: (typeof PRIORITIES)[number];
-  @IsOptional() @IsIn(RECURRENCES as unknown as string[]) recurrence_type?: (typeof RECURRENCES)[number];
+  @IsOptional()
+  @IsIn(RECURRENCES as unknown as string[])
+  recurrence_type?: (typeof RECURRENCES)[number];
   @IsOptional() @IsInt() @Min(1) recurrence_interval?: number;
   @IsOptional() @IsDateString() recurrence_until?: string;
 }
@@ -37,7 +39,9 @@ export class UpdateScheduleDto {
   @IsOptional() @IsIn(ITEM_TYPES as unknown as string[]) item_type?: (typeof ITEM_TYPES)[number];
   @IsOptional() @IsIn(STATUSES as unknown as string[]) status?: (typeof STATUSES)[number];
   @IsOptional() @IsIn(PRIORITIES as unknown as string[]) priority?: (typeof PRIORITIES)[number];
-  @IsOptional() @IsIn(RECURRENCES as unknown as string[]) recurrence_type?: (typeof RECURRENCES)[number];
+  @IsOptional()
+  @IsIn(RECURRENCES as unknown as string[])
+  recurrence_type?: (typeof RECURRENCES)[number];
   @IsOptional() @IsInt() @Min(1) recurrence_interval?: number;
   @IsOptional() @IsDateString() recurrence_until?: string;
   @IsOptional() @IsBoolean() is_reminded?: boolean;

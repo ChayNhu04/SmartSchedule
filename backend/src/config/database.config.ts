@@ -9,10 +9,7 @@ export const databaseConfig: TypeOrmModuleAsyncOptions = {
     url: config.get<string>('DATABASE_URL'),
     autoLoadEntities: true,
     synchronize: false,
-    ssl:
-      config.get<string>('DATABASE_SSL') === 'true'
-        ? { rejectUnauthorized: false }
-        : false,
+    ssl: config.get<string>('DATABASE_SSL') === 'true' ? { rejectUnauthorized: false } : false,
     logging: config.get<string>('NODE_ENV') === 'development' ? ['error', 'warn'] : false,
   }),
 };

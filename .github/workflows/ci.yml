@@ -31,9 +31,9 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile=false
-      - run: pnpm --filter smartschedule-backend lint --if-present
+      - run: pnpm --filter smartschedule-backend lint
       - run: pnpm --filter smartschedule-backend build
-      - run: pnpm --filter smartschedule-backend test --if-present
+      - run: pnpm --filter smartschedule-backend test
 
   web:
     name: Web typecheck + build
