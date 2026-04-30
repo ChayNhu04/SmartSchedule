@@ -3,7 +3,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -105,17 +104,14 @@ export default function RegisterScreen() {
             <Button label="Tạo tài khoản" onPress={submit} loading={loading} size="lg" />
           </View>
 
-          <Pressable
-            onPress={() => router.back()}
-            style={{ marginTop: spacing.xl, alignItems: "center" }}
-          >
+          <View style={{ marginTop: spacing.xl, alignItems: "center" }}>
             <Text style={[typography.body, { color: colors.textMuted }]}>
               Đã có tài khoản?{" "}
               <Link href="/(auth)/login" style={{ color: colors.primary, fontWeight: "600" }}>
                 Đăng nhập
               </Link>
             </Text>
-          </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
