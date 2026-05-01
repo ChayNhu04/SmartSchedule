@@ -1,13 +1,15 @@
-import axios from 'axios';
 import { api, TOKEN_KEY } from '../../web/lib/api';
-
-// Mock axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('API Client (Web)', () => {
   let mockLocalStorage: { [key: string]: string };
   let mockLocation: { pathname: string; href: string };
+
+  beforeAll(() => {
+    // Replace window.location with a plain object (works on jsdom <23 where location is configurable).
+    mockLocation = { pathname: '/', href: '/' };
+    delete (window as any).location;
+    (window as any).location = mockLocation;
+  });
 
   beforeEach(() => {
     // Mock localStorage
@@ -28,12 +30,9 @@ describe('API Client (Web)', () => {
       writable: true,
     });
 
-    // Mock window.location
-    mockLocation = { pathname: '/', href: '/' };
-    Object.defineProperty(window, 'location', {
-      value: mockLocation,
-      writable: true,
-    });
+    // Reset mock location fields between tests
+    mockLocation.pathname = '/';
+    mockLocation.href = '/';
 
     jest.clearAllMocks();
   });
@@ -57,7 +56,7 @@ describe('API Client (Web)', () => {
       const interceptor = api.interceptors.request.handlers[0];
       
       if (interceptor && 'fulfilled' in interceptor && interceptor.fulfilled) {
-        const result = interceptor.fulfilled(config);
+        const result = interceptor.fulfilled(config as any) as any;
         expect(result.headers.Authorization).toBe(`Bearer ${token}`);
       }
     });
@@ -67,7 +66,7 @@ describe('API Client (Web)', () => {
       const interceptor = api.interceptors.request.handlers[0];
       
       if (interceptor && 'fulfilled' in interceptor && interceptor.fulfilled) {
-        const result = interceptor.fulfilled(config);
+        const result = interceptor.fulfilled(config as any) as any;
         expect(result.headers.Authorization).toBeUndefined();
       }
     });

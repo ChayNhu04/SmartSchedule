@@ -5,15 +5,18 @@ import { Platform } from 'react-native';
 import { registerForPushNotificationsAsync } from '../../mobile/services/notifications';
 import { api } from '../../mobile/services/api';
 
-// Mock modules
-jest.mock('expo-notifications');
-jest.mock('expo-device');
-jest.mock('expo-constants');
+// expo-notifications, expo-device, expo-constants are already mocked in jest.setup.js
 jest.mock('react-native/Libraries/Utilities/Platform', () => ({
   OS: 'ios',
   select: jest.fn((obj) => obj.ios),
 }));
-jest.mock('../../mobile/services/api');
+jest.mock('../../mobile/services/api', () => ({
+  api: {
+    patch: jest.fn(),
+    get: jest.fn(),
+    post: jest.fn(),
+  },
+}));
 
 describe('Notifications Service (Mobile)', () => {
   beforeEach(() => {
@@ -22,12 +25,14 @@ describe('Notifications Service (Mobile)', () => {
 
   describe('registerForPushNotificationsAsync', () => {
     it('should return null if not a physical device', async () => {
-      (Device.isDevice as any) = false;
+      (global as any).__deviceState.isDevice = false;
 
       const result = await registerForPushNotificationsAsync();
 
       expect(result).toBeNull();
       expect(Notifications.getPermissionsAsync).not.toHaveBeenCalled();
+
+      (global as any).__deviceState.isDevice = true;
     });
 
     it('should request permissions if not granted', async () => {
@@ -190,14 +195,28 @@ describe('Notifications Service (Mobile)', () => {
   });
 
   describe('Notification handler', () => {
-    it('should be configured with correct settings', () => {
-      expect(Notifications.setNotificationHandler).toHaveBeenCalledWith({
-        handleNotification: expect.any(Function),
+    // The notifications module calls setNotificationHandler at import-time.
+    // Re-require fresh and capture the call payload inside isolated modules.
+    let reloadedHandlerCall: any;
+
+    beforeAll(() => {
+      jest.isolateModules(() => {
+        const freshNotifications = require('expo-notifications') as typeof Notifications;
+        (freshNotifications.setNotificationHandler as jest.Mock).mockClear();
+        require('../../mobile/services/notifications');
+        reloadedHandlerCall = (
+          freshNotifications.setNotificationHandler as jest.Mock
+        ).mock.calls[0]?.[0];
       });
     });
 
+    it('should be configured with correct settings', () => {
+      expect(reloadedHandlerCall).toBeDefined();
+      expect(reloadedHandlerCall.handleNotification).toEqual(expect.any(Function));
+    });
+
     it('should return correct notification behavior', async () => {
-      const handler = (Notifications.setNotificationHandler as jest.Mock).mock.calls[0][0];
+      const handler = reloadedHandlerCall;
       const result = await handler.handleNotification();
 
       expect(result).toEqual({

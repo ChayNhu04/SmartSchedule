@@ -60,7 +60,10 @@ describe('ScheduleCard Component (Mobile)', () => {
   it('should render tags', () => {
     const { getByTestId } = render(<ScheduleCard schedule={mockSchedule} />);
 
-    expect(getByTestId('tag-work').props.children).toBe('#work');
+    // RN renders <Text>#{tag.name}</Text> as children array ['#', 'work']
+    const children = getByTestId('tag-work').props.children;
+    const text = Array.isArray(children) ? children.join('') : children;
+    expect(text).toBe('#work');
   });
 
   it('should call onPress when pressed', () => {

@@ -2,10 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SchedulesService } from '../backend/src/schedules/schedules.service';
-import { Schedule, ScheduleStatus } from '../backend/src/schedules/entities/schedule.entity';
-import { AuditService } from '../backend/src/audit/audit.service';
-import { CreateScheduleDto, UpdateScheduleDto } from '../backend/src/schedules/dto/schedule.dto';
+import { SchedulesService } from '../../backend/src/schedules/schedules.service';
+import { Schedule, ScheduleStatus } from '../../backend/src/schedules/entities/schedule.entity';
+import { AuditService } from '../../backend/src/audit/audit.service';
+import { CreateScheduleDto, UpdateScheduleDto } from '../../backend/src/schedules/dto/schedule.dto';
 
 describe('SchedulesService', () => {
   let service: SchedulesService;
@@ -34,9 +34,9 @@ describe('SchedulesService', () => {
     recurrence_parent_id: null,
     created_at: new Date(),
     updated_at: new Date(),
-    user: null,
+    user: undefined,
     tags: [],
-    shares: [],
+    sharedWith: [],
   };
 
   const mockRepository = {

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "baseUrl": "../../web",
+    "paths": {
+      "@/*": ["./*"],
+      "*": ["node_modules/*"]
+    },
+    "typeRoots": [
+      "../../web/node_modules/@types"
+    ],
+    "types": ["jest", "node", "@testing-library/jest-dom"]
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "../../web/**/*.ts", "../../web/**/*.tsx"]
+}

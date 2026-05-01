@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuditService } from '../backend/src/audit/audit.service';
-import { ScheduleAuditLog } from '../backend/src/audit/entities/schedule-audit-log.entity';
+import { AuditService } from '../../backend/src/audit/audit.service';
+import { ScheduleAuditLog } from '../../backend/src/audit/entities/schedule-audit-log.entity';
 
 describe('AuditService', () => {
   let service: AuditService;
@@ -12,7 +12,7 @@ describe('AuditService', () => {
   const scheduleId = 1;
 
   const mockAuditLog: ScheduleAuditLog = {
-    id: BigInt(1),
+    id: '1',
     schedule_id: scheduleId,
     user_id: userId,
     action: 'create',

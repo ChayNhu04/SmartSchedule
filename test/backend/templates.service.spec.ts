@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TemplatesService } from '../backend/src/templates/templates.service';
-import { ScheduleTemplate } from '../backend/src/templates/entities/schedule-template.entity';
-import { Schedule } from '../backend/src/schedules/entities/schedule.entity';
+import { TemplatesService } from '../../backend/src/templates/templates.service';
+import { ScheduleTemplate } from '../../backend/src/templates/entities/schedule-template.entity';
+import { Schedule } from '../../backend/src/schedules/entities/schedule.entity';
 
 describe('TemplatesService', () => {
   let service: TemplatesService;
@@ -24,7 +24,8 @@ describe('TemplatesService', () => {
     default_remind_minutes: 10,
     priority: 'normal',
     created_at: new Date(),
-    user: null,
+    updated_at: new Date(),
+    user: undefined,
   };
 
   const mockSchedule: any = {

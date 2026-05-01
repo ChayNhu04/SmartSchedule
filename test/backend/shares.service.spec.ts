@@ -2,12 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SharesService } from '../backend/src/shares/shares.service';
-import { Schedule } from '../backend/src/schedules/entities/schedule.entity';
-import { User } from '../backend/src/users/entities/user.entity';
+import { SharesService } from '../../backend/src/shares/shares.service';
+import { Schedule } from '../../backend/src/schedules/entities/schedule.entity';
+import { User } from '../../backend/src/users/entities/user.entity';
 
 describe('SharesService', () => {
-  let service: SharesService';
+  let service: SharesService;
   let schedulesRepo: Repository<Schedule>;
   let usersRepo: Repository<User>;
 
@@ -22,11 +22,8 @@ describe('SharesService', () => {
     expo_push_token: null,
     created_at: new Date(),
     updated_at: new Date(),
-    settings: null,
+    settings: undefined,
     schedules: [],
-    tags: [],
-    templates: [],
-    shared_schedules: [],
   };
 
   const mockTargetUser: User = {
@@ -37,11 +34,8 @@ describe('SharesService', () => {
     expo_push_token: null,
     created_at: new Date(),
     updated_at: new Date(),
-    settings: null,
+    settings: undefined,
     schedules: [],
-    tags: [],
-    templates: [],
-    shared_schedules: [],
   };
 
   const mockSchedule: any = {
@@ -247,7 +241,7 @@ describe('SharesService', () => {
     });
 
     it('should return empty array if no shares', async () => {
-      mockSchedulesRepository.findOne.mockResolvedValue(mockSchedule);
+      mockSchedulesRepository.findOne.mockResolvedValue({ ...mockSchedule, sharedWith: [] });
 
       const result = await service.listSharedUsers(1, ownerId);
 
