@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UsersService } from '../backend/src/users/users.service';
-import { User } from '../backend/src/users/entities/user.entity';
-import { UserSettings } from '../backend/src/users/entities/user-settings.entity';
+import { UsersService } from '../../backend/src/users/users.service';
+import { User } from '../../backend/src/users/entities/user.entity';
+import { UserSettings } from '../../backend/src/users/entities/user-settings.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -21,11 +21,8 @@ describe('UsersService', () => {
     expo_push_token: null,
     created_at: new Date(),
     updated_at: new Date(),
-    settings: null,
+    settings: undefined,
     schedules: [],
-    tags: [],
-    templates: [],
-    shared_schedules: [],
   };
 
   const mockSettings: UserSettings = {
@@ -35,7 +32,9 @@ describe('UsersService', () => {
     notify_via_push: true,
     work_start_hour: 9,
     work_end_hour: 18,
-    user: null,
+    created_at: new Date(),
+    updated_at: new Date(),
+    user: undefined,
   };
 
   const mockUsersRepository = {

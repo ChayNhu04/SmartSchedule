@@ -7,11 +7,10 @@ module.exports = {
   },
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: {
-        jsx: 'react',
-      },
+      tsconfig: '<rootDir>/tsconfig.json',
     }],
   },
+  modulePaths: ['<rootDir>/../../web/node_modules'],
   testMatch: [
     '**/__tests__/**/*.(test|spec).(ts|tsx)',
     '**/*.(test|spec).(ts|tsx)',

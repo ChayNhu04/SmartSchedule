@@ -4,10 +4,13 @@ import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { AuthService } from '../backend/src/auth/auth.service';
-import { User } from '../backend/src/users/entities/user.entity';
-import { UserSettings } from '../backend/src/users/entities/user-settings.entity';
-import { RegisterDto, LoginDto } from '../backend/src/auth/dto/auth.dto';
+import { AuthService } from '../../backend/src/auth/auth.service';
+import { User } from '../../backend/src/users/entities/user.entity';
+import { UserSettings } from '../../backend/src/users/entities/user-settings.entity';
+import { RegisterDto, LoginDto } from '../../backend/src/auth/dto/auth.dto';
+
+jest.mock('bcryptjs');
+const bcryptMock = bcrypt as jest.Mocked<typeof bcrypt>;
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -23,11 +26,8 @@ describe('AuthService', () => {
     expo_push_token: null,
     created_at: new Date(),
     updated_at: new Date(),
-    settings: null,
+    settings: undefined,
     schedules: [],
-    tags: [],
-    templates: [],
-    shared_schedules: [],
   };
 
   const mockUserRepository = {
@@ -127,11 +127,11 @@ describe('AuthService', () => {
       mockSettingsRepository.save.mockResolvedValue({});
       mockJwtService.sign.mockReturnValue('jwt_token');
 
-      const bcryptHashSpy = jest.spyOn(bcrypt, 'hash');
+      bcryptMock.hash.mockResolvedValue('hashed' as never);
 
       await service.register(registerDto);
 
-      expect(bcryptHashSpy).toHaveBeenCalledWith(registerDto.password, 10);
+      expect(bcryptMock.hash).toHaveBeenCalledWith(registerDto.password, 10);
     });
 
     it('should convert email to lowercase', async () => {
@@ -159,7 +159,7 @@ describe('AuthService', () => {
 
     it('should successfully login with correct credentials', async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+      bcryptMock.compare.mockResolvedValue(true as never);
       mockJwtService.sign.mockReturnValue('jwt_token');
 
       const result = await service.login(loginDto);
@@ -188,7 +188,7 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if password is incorrect', async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+      bcryptMock.compare.mockResolvedValue(false as never);
 
       await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
     });
@@ -196,7 +196,7 @@ describe('AuthService', () => {
     it('should convert email to lowercase when logging in', async () => {
       const dtoWithUpperCase = { ...loginDto, email: 'TEST@EXAMPLE.COM' };
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+      bcryptMock.compare.mockResolvedValue(true as never);
       mockJwtService.sign.mockReturnValue('jwt_token');
 
       await service.login(dtoWithUpperCase);
@@ -232,7 +232,7 @@ describe('AuthService', () => {
   describe('signToken', () => {
     it('should generate JWT with correct payload', async () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+      bcryptMock.compare.mockResolvedValue(true as never);
       mockJwtService.sign.mockReturnValue('jwt_token');
 
       await service.login({ email: mockUser.email, password: 'password' });

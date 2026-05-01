@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RemindersService } from '../backend/src/reminders/reminders.service';
-import { Schedule, ScheduleStatus } from '../backend/src/schedules/entities/schedule.entity';
-import { PushService } from '../backend/src/reminders/push.service';
+import { RemindersService } from '../../backend/src/reminders/reminders.service';
+import { Schedule, ScheduleStatus } from '../../backend/src/schedules/entities/schedule.entity';
+import { PushService } from '../../backend/src/reminders/push.service';
 
 describe('RemindersService', () => {
   let service: RemindersService;
@@ -47,15 +47,14 @@ describe('RemindersService', () => {
         notify_via_push: true,
         work_start_hour: 9,
         work_end_hour: 18,
-        user: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+        user: undefined,
       },
       schedules: [],
-      tags: [],
-      templates: [],
-      shared_schedules: [],
     },
     tags: [],
-    shares: [],
+    sharedWith: [],
   };
 
   const mockRepository = {
@@ -211,12 +210,12 @@ describe('RemindersService', () => {
 
     it('should use default_remind_minutes from user settings', async () => {
       const customSettings = {
-        ...mockSchedule.user.settings,
+        ...mockSchedule.user!.settings,
         default_remind_minutes: 60,
       };
       const scheduleWithCustomSettings = {
         ...mockSchedule,
-        user: { ...mockSchedule.user, settings: customSettings },
+        user: { ...mockSchedule.user!, settings: customSettings },
       };
 
       mockRepository.find

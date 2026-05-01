@@ -5,8 +5,12 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
+
 import { User } from '../users/entities/user.entity';
 import { UserSettings } from '../users/entities/user-settings.entity';
+
+jest.mock('bcryptjs');
+const bcryptMock = bcrypt as jest.Mocked<typeof bcrypt>;
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -21,10 +25,7 @@ describe('AuthService', () => {
     display_name: 'Test User',
     expo_push_token: null,
     created_at: new Date(),
-    settings: null,
-    schedules: [],
-    tags: [],
-    templates: [],
+    updated_at: new Date(),
   };
 
   beforeEach(async () => {
@@ -80,7 +81,7 @@ describe('AuthService', () => {
       settingsRepo.save.mockResolvedValue({} as any);
       jwtService.sign.mockReturnValue('jwt_token');
 
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed_password' as never);
+      bcryptMock.hash.mockResolvedValue('hashed_password' as never);
 
       const result = await service.register(dto);
 
@@ -130,7 +131,7 @@ describe('AuthService', () => {
       settingsRepo.save.mockResolvedValue({} as any);
       jwtService.sign.mockReturnValue('jwt_token');
 
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed_password' as never);
+      bcryptMock.hash.mockResolvedValue('hashed_password' as never);
 
       await service.register(dto);
 
@@ -149,7 +150,7 @@ describe('AuthService', () => {
 
       userRepo.findOne.mockResolvedValue(mockUser);
       jwtService.sign.mockReturnValue('jwt_token');
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+      bcryptMock.compare.mockResolvedValue(true as never);
 
       const result = await service.login(dto);
 
@@ -186,7 +187,7 @@ describe('AuthService', () => {
       };
 
       userRepo.findOne.mockResolvedValue(mockUser);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+      bcryptMock.compare.mockResolvedValue(false as never);
 
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
       await expect(service.login(dto)).rejects.toThrow('Email hoặc mật khẩu không đúng');

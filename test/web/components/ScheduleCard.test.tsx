@@ -22,7 +22,7 @@ const mockSchedule = {
   recurrence_type: 'none' as const,
   recurrence_interval: 1,
   tags: [
-    { id: 1, name: 'work', color: '#3B82F6', user_id: 'user-123', created_at: new Date() },
+    { id: 1, name: 'work', color: '#3B82F6', user_id: 'user-123', created_at: new Date().toISOString() },
   ],
   remind_at: null,
   is_reminded: false,
@@ -30,8 +30,8 @@ const mockSchedule = {
   end_notified_at: null,
   recurrence_until: null,
   recurrence_parent_id: null,
-  created_at: new Date(),
-  updated_at: new Date(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
 };
 
 const createWrapper = () => {

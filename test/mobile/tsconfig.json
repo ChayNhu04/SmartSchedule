@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "baseUrl": "../../mobile",
+    "paths": {
+      "@/*": ["./*"],
+      "*": ["node_modules/*"]
+    },
+    "typeRoots": ["../../mobile/node_modules/@types"],
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../../mobile/**/*.ts",
+    "../../mobile/**/*.tsx"
+  ]
+}

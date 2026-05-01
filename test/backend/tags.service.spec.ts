@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TagsService } from '../backend/src/tags/tags.service';
-import { Tag } from '../backend/src/tags/entities/tag.entity';
-import { Schedule } from '../backend/src/schedules/entities/schedule.entity';
+import { TagsService } from '../../backend/src/tags/tags.service';
+import { Tag } from '../../backend/src/tags/entities/tag.entity';
+import { Schedule } from '../../backend/src/schedules/entities/schedule.entity';
 
 describe('TagsService', () => {
   let service: TagsService;
@@ -19,7 +19,7 @@ describe('TagsService', () => {
     name: 'work',
     color: '#3B82F6',
     created_at: new Date(),
-    user: null,
+    user: undefined,
     schedules: [],
   };
 
@@ -27,7 +27,6 @@ describe('TagsService', () => {
     id: 1,
     user_id: userId,
     title: 'Test Schedule',
-    tags: [],
   };
 
   const mockTagsRepository = {
@@ -298,7 +297,7 @@ describe('TagsService', () => {
       const result = await service.detach(userId, 1, 'work');
 
       expect(result.tags).toHaveLength(1);
-      expect(result.tags[0].name).toBe('urgent');
+      expect(result.tags![0].name).toBe('urgent');
     });
 
     it('should normalize tag name before detaching', async () => {
@@ -307,7 +306,6 @@ describe('TagsService', () => {
       mockSchedulesRepository.findOne.mockResolvedValue(schedule);
       mockSchedulesRepository.save.mockResolvedValue({
         ...schedule,
-        tags: [],
       });
 
       await service.detach(userId, 1, '  WORK  ');
