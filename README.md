@@ -79,7 +79,61 @@ pnpm typecheck       # typecheck mọi package
 pnpm lint            # lint mọi package
 pnpm build           # build tất cả
 pnpm test            # test tất cả
+pnpm test:unit       # chỉ unit tests (nhanh, không cần DB)
+pnpm test:e2e        # chỉ E2E tests (cần PostgreSQL)
+pnpm test:cov        # test với coverage report
 ```
+
+## Testing
+
+Dự án có **82 test cases** (45 unit tests + 37 E2E tests) cho backend.
+
+### Chạy tests nhanh (Unit tests - không cần database)
+
+**Windows:**
+```powershell
+cd test
+.\run-tests.ps1 unit
+```
+
+**Linux/Mac:**
+```bash
+cd test
+./run-tests.sh unit
+```
+
+### Chạy E2E tests (cần PostgreSQL)
+
+1. Đảm bảo PostgreSQL đang chạy
+2. Tạo database test: `CREATE DATABASE smartschedule_test;`
+3. Set `DATABASE_URL` trong `backend/.env`
+4. Chạy migrations: `psql $DATABASE_URL -f backend/migrations/001-init.sql`
+5. Chạy tests:
+
+```powershell
+# Windows
+cd test
+.\run-tests.ps1 e2e
+
+# Linux/Mac
+cd test
+./run-tests.sh e2e
+```
+
+### Documentation
+
+- **[test/README.md](./test/README.md)** - Full testing documentation (English)
+- **[test/HUONG-DAN.md](./test/HUONG-DAN.md)** - Hướng dẫn chi tiết (Tiếng Việt)
+- **[test/TEST-SUMMARY.md](./test/TEST-SUMMARY.md)** - Test coverage summary
+
+### Test Coverage
+
+| Module | Unit Tests | E2E Tests | Total |
+|--------|-----------|-----------|-------|
+| Auth | 12 | 12 | 24 |
+| Schedules | 20 | 25 | 45 |
+| Reminders | 13 | 0 | 13 |
+| **TOTAL** | **45** | **37** | **82** |
 
 ---
 

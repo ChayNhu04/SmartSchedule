@@ -1,0 +1,16 @@
+# Test coverage
+coverage/
+*.lcov
+
+# Test results
+test-results/
+junit.xml
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
