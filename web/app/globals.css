@@ -141,3 +141,22 @@
 .fc .fc-day-today .fc-daygrid-day-number {
   @apply text-primary;
 }
+
+@media (max-width: 640px) {
+  .fc .fc-toolbar.fc-header-toolbar {
+    @apply flex-col gap-2;
+  }
+  .fc .fc-toolbar-chunk {
+    @apply flex items-center gap-1;
+  }
+  .fc .fc-toolbar-title {
+    @apply text-base;
+  }
+  .fc .fc-button {
+    @apply px-2 py-1 text-xs;
+  }
+  .fc .fc-col-header-cell-cushion,
+  .fc .fc-daygrid-day-number {
+    @apply text-xs;
+  }
+}
