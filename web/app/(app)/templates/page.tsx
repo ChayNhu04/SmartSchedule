@@ -74,10 +74,10 @@ export default function TemplatesPage() {
   });
 
   return (
-    <div className="container space-y-6 py-8">
+    <div className="container space-y-6 py-6 md:py-8">
       <div>
-        <h1 className="text-3xl font-bold">Template</h1>
-        <p className="text-muted-foreground">Lưu preset để clone nhanh thành lịch mới</p>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Template</h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">Lưu preset để clone nhanh thành lịch mới</p>
       </div>
 
       <Card>

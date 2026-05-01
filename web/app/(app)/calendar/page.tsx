@@ -46,13 +46,16 @@ export default function CalendarPage() {
   );
 
   return (
-    <div className="container space-y-6 py-8">
-      <div className="flex items-center justify-between">
+    <div className="container space-y-6 py-6 md:py-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Lịch tháng</h1>
-          <p className="text-muted-foreground">Click vào sự kiện để chỉnh sửa</p>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Lịch tháng</h1>
+          <p className="mt-1 text-sm text-muted-foreground md:text-base">
+            Click vào sự kiện để chỉnh sửa
+          </p>
         </div>
         <Button
+          size="sm"
           onClick={() => {
             setEditing(null);
             setDialogOpen(true);
@@ -61,14 +64,17 @@ export default function CalendarPage() {
           + Thêm lịch
         </Button>
       </div>
-      <div className="rounded-lg border bg-card p-4">
+      <div className="calendar-wrapper rounded-lg border bg-card p-2 md:p-4">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           headerToolbar={{
-            left: "prev,next today",
+            left: "prev,next",
             center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
+            right: "today",
+          }}
+          footerToolbar={{
+            center: "dayGridMonth,timeGridWeek,timeGridDay",
           }}
           events={events}
           height="auto"

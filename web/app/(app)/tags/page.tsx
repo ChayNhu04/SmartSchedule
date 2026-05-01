@@ -36,10 +36,10 @@ export default function TagsPage() {
   });
 
   return (
-    <div className="container space-y-6 py-8">
+    <div className="container space-y-6 py-6 md:py-8">
       <div>
-        <h1 className="text-3xl font-bold">Nhãn (Tags)</h1>
-        <p className="text-muted-foreground">Quản lý các nhãn để phân loại lịch</p>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Nhãn (Tags)</h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">Quản lý các nhãn để phân loại lịch</p>
       </div>
 
       <Card>

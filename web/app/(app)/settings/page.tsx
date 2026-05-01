@@ -60,8 +60,8 @@ export default function SettingsPage() {
   });
 
   return (
-    <div className="container max-w-2xl space-y-6 py-8">
-      <h1 className="text-3xl font-bold">Cài đặt</h1>
+    <div className="container max-w-2xl space-y-6 py-6 md:py-8">
+      <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Cài đặt</h1>
 
       <Card>
         <CardHeader>
