@@ -8,6 +8,9 @@
     "typecheck": "pnpm -r --parallel run typecheck",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
+    "test:unit": "pnpm --filter smartschedule-backend test -- --testPathIgnorePatterns=e2e",
+    "test:e2e": "pnpm --filter smartschedule-backend test:e2e",
+    "test:cov": "pnpm --filter smartschedule-backend test:cov",
     "dev:backend": "pnpm --filter smartschedule-backend start:dev",
     "dev:web": "pnpm --filter smartschedule-web dev",
     "dev:mobile": "pnpm --filter smartschedule-mobile start"
