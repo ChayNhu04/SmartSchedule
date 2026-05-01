@@ -107,7 +107,11 @@ export default function RegisterScreen() {
           <View style={{ marginTop: spacing.xl, alignItems: "center" }}>
             <Text style={[typography.body, { color: colors.textMuted }]}>
               Đã có tài khoản?{" "}
-              <Link href="/(auth)/login" style={{ color: colors.primary, fontWeight: "600" }}>
+              <Link
+                href="/(auth)/login"
+                replace
+                style={{ color: colors.primary, fontWeight: "600" }}
+              >
                 Đăng nhập
               </Link>
             </Text>
