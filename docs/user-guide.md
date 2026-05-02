@@ -67,10 +67,16 @@ Tài liệu cho **người dùng cuối** SmartSchedule. Có 2 client:
 | **Lịch tháng** (calendar view) | Hiển thị dạng FullCalendar | ✓ `/calendar` | ✗ |
 
 ### Tương tác trên mỗi lịch
-- Bấm vào lịch → xem chi tiết.
-- **Hoàn thành**: API `POST /schedules/:id/complete` (cần kiểm tra UI button trên cả 2 client).
-- **Sửa**: `PATCH /schedules/:id`.
-- **Xoá**: `DELETE /schedules/:id`.
+
+**Web** (trang Hôm nay / Sắp tới / Quá hạn / Calendar):
+- 3 nút icon ở góc phải mỗi card: ✓ **Hoàn thành** (`POST /schedules/:id/complete`), ✏️ **Sửa** (mở dialog), 🗑 **Xoá** (xác nhận rồi `DELETE /schedules/:id`).
+
+**Mobile**:
+- Bấm vào card lịch → mở **màn hình Chi tiết** (`/schedule/:id`):
+  - Hiển thị thời gian bắt đầu/kết thúc, nhắc lúc, loại, lặp, mô tả.
+  - Nút **Đánh dấu hoàn thành** (chỉ hiện khi status = pending).
+  - Nút **Sửa** → mở màn hình Sửa với form đã điền sẵn.
+  - Nút **Xoá** → bật `Alert` xác nhận, sau đó `DELETE /schedules/:id`.
 
 ---
 
@@ -132,7 +138,9 @@ Trang `/settings` — cần kiểm tra UI hiện tại có những gì.
 | Tính năng | Backend | Web | Mobile |
 |---|:---:|:---:|:---:|
 | Đăng ký / đăng nhập | ✓ | ✓ | ✓ |
-| Thêm / sửa / xoá lịch | ✓ | ✓ | ✓ (form UX cải tiến) |
+| Thêm lịch | ✓ | ✓ | ✓ |
+| Xem chi tiết / Sửa / Xoá lịch | ✓ | ✓ (icon trên card) | ✓ (màn hình `/schedule/:id`) |
+| Đánh dấu hoàn thành | ✓ | ✓ | ✓ |
 | Hôm nay / Sắp tới | ✓ | ✓ | ✓ |
 | Quá hạn | ✓ | ✓ | ✗ |
 | Calendar view | ✓ | ✓ | ✗ |
