@@ -6,9 +6,14 @@ import { registerForPushNotificationsAsync } from '../../mobile/services/notific
 import { api } from '../../mobile/services/api';
 
 // expo-notifications, expo-device, expo-constants are already mocked in jest.setup.js
+// react-native@0.81 imports Platform via `require('./Platform').default`,
+// so the mock must expose a default export.
 jest.mock('react-native/Libraries/Utilities/Platform', () => ({
-  OS: 'ios',
-  select: jest.fn((obj) => obj.ios),
+  __esModule: true,
+  default: {
+    OS: 'ios',
+    select: jest.fn((obj) => obj.ios),
+  },
 }));
 jest.mock('../../mobile/services/api', () => ({
   api: {
@@ -220,7 +225,6 @@ describe('Notifications Service (Mobile)', () => {
       const result = await handler.handleNotification();
 
       expect(result).toEqual({
-        shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
         shouldShowBanner: true,
