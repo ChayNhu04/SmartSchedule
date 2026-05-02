@@ -158,7 +158,7 @@ Chi tiết, API spec, deploy guide xem [`PROJECT.md`](./PROJECT.md).
 ```
    ┌────────────┐       ┌───────────────┐       ┌───────────┐
    │  web       │──────▶│  backend      │──────▶│  Neon     │
-   │  Vercel    │       │  Render Docker│       │  Postgres │
+   │  Vercel    │       │  Railway      │       │  Postgres │
    └────────────┘       └───────────────┘       └───────────┘
                                 ▲
                                 │
@@ -169,10 +169,12 @@ Chi tiết, API spec, deploy guide xem [`PROJECT.md`](./PROJECT.md).
 ```
 
 - **Web**: Vercel detect Next.js, set `NEXT_PUBLIC_API_URL` → deploy.
-- **Backend**: Render / Fly với Dockerfile có sẵn, kết nối Neon Postgres.
+- **Backend**: Railway / Render / Fly với Dockerfile có sẵn, kết nối Neon Postgres.
 - **Mobile**: `eas build` ra APK / IPA hoặc Expo Go cho dev.
 
-Hướng dẫn từng bước trong [`PROJECT.md` mục Deploy](./PROJECT.md#8-deploy).
+Runbook chi tiết:
+- Backend trên **Railway + Neon**: [`docs/deployment-railway.md`](./docs/deployment-railway.md).
+- Tổng quan + web/mobile/CI: [`PROJECT.md` §8](./PROJECT.md#8-deploy).
 
 ## License
 

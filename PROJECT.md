@@ -507,6 +507,8 @@ docker compose logs -f backend
 
 ### 8.2 Production (VPS / Render / Railway)
 
+> Cần runbook step-by-step cho **Railway + Neon Postgres**? Xem [`docs/deployment-railway.md`](./docs/deployment-railway.md) — bao gồm config monorepo Root Directory, env vars, migration SQL, smoke test, troubleshooting và checklist rotate credentials.
+
 1. Build image:
    ```bash
    docker build -t smartschedule-backend ./backend
