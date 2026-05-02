@@ -23,6 +23,20 @@ export const PRIORITY_LABEL_VI: Record<SchedulePriority, string> = {
   high: 'Cao',
 };
 
+export const ITEM_TYPE_LABEL_VI: Record<ScheduleItemType, string> = {
+  task: 'Công việc',
+  meeting: 'Cuộc họp',
+  event: 'Sự kiện',
+  reminder: 'Nhắc nhở',
+};
+
+export const RECURRENCE_LABEL_VI: Record<RecurrenceType, string> = {
+  none: 'Không lặp',
+  daily: 'Hằng ngày',
+  weekly: 'Hằng tuần',
+  monthly: 'Hằng tháng',
+};
+
 export interface AuthUser {
   id: string;
   email: string;
