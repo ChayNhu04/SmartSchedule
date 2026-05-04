@@ -107,7 +107,11 @@ export function ScheduleCard({
           </Text>
         ) : null}
 
-        {(isDone || isCancelled || isOverdue || schedule.recurrence_type !== "none") && (
+        {(isDone ||
+          isCancelled ||
+          isOverdue ||
+          schedule.recurrence_type !== "none" ||
+          (schedule.tags && schedule.tags.length > 0)) && (
           <View style={styles.badgesRow}>
             {isDone && (
               <Badge color={colors.success} bg={colors.successMuted} icon="checkmark-circle">
@@ -133,6 +137,21 @@ export function ScheduleCard({
                 Lặp lại
               </Badge>
             )}
+            {schedule.tags?.map((t) => (
+              <View
+                key={t.id}
+                style={[
+                  styles.tagChip,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Text
+                  style={[typography.captionStrong, { color: colors.textMuted }]}
+                >
+                  #{t.name}
+                </Text>
+              </View>
+            ))}
           </View>
         )}
       </View>
@@ -205,5 +224,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.full,
+  },
+  tagChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    borderWidth: 1,
   },
 });

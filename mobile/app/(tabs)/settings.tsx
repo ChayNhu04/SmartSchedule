@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -285,6 +286,68 @@ export default function SettingsScreen() {
           )}
         </View>
 
+        {/* Manage links card */}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.card, borderColor: colors.border },
+            elevation.soft,
+          ]}
+        >
+          <Text
+            style={[
+              typography.captionStrong,
+              {
+                color: colors.textMuted,
+                marginBottom: spacing.sm,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+              },
+            ]}
+          >
+            Quản lý
+          </Text>
+          <Pressable
+            onPress={() => router.push("/tags" as never)}
+            style={({ pressed }) => [
+              styles.linkRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+            accessibilityLabel="Mở trang quản lý nhãn"
+          >
+            <View
+              style={[
+                styles.linkIconWrap,
+                { backgroundColor: colors.primaryMuted },
+              ]}
+            >
+              <Ionicons
+                name="pricetags-outline"
+                size={18}
+                color={colors.primary}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.bodyStrong, { color: colors.text }]}>
+                Nhãn
+              </Text>
+              <Text
+                style={[
+                  typography.caption,
+                  { color: colors.textMuted, marginTop: 2 },
+                ]}
+              >
+                Tạo và quản lý nhãn để phân loại lịch.
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={colors.textSubtle}
+            />
+          </Pressable>
+        </View>
+
         {/* About card */}
         <View
           style={[
@@ -355,5 +418,17 @@ const styles = StyleSheet.create({
   aboutRow: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  linkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  linkIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
