@@ -28,7 +28,7 @@ const NAV = [
   { href: "/calendar", label: "Lịch tháng", icon: Calendar },
   { href: "/search", label: "Tìm kiếm", icon: Search },
   { href: "/tags", label: "Nhãn", icon: TagIcon },
-  { href: "/templates", label: "Template", icon: LayoutTemplate },
+  { href: "/templates", label: "Mẫu lịch", icon: LayoutTemplate },
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 

@@ -24,7 +24,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { api } from "@/lib/api";
+
+function combineLocalDateTime(date: string, time: string): Date | null {
+  if (!date) return null;
+  const [y, mo, da] = date.split("-").map(Number);
+  const [hh, mm] = (time || "00:00").split(":").map(Number);
+  if (!y || !mo || !da) return null;
+  const d = new Date(y, (mo ?? 1) - 1, da ?? 1, hh ?? 0, mm ?? 0, 0, 0);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
 export default function TemplatesPage() {
   const qc = useQueryClient();
@@ -34,7 +44,11 @@ export default function TemplatesPage() {
 
   const [instOpen, setInstOpen] = useState(false);
   const [instName, setInstName] = useState("");
-  const [instStart, setInstStart] = useState("");
+  const [instDate, setInstDate] = useState("");
+  const [instTime, setInstTime] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  const instStartDate = combineLocalDateTime(instDate, instTime);
 
   const { data } = useQuery({
     queryKey: ["templates"],
@@ -49,12 +63,12 @@ export default function TemplatesPage() {
         duration_minutes: duration > 0 ? duration : undefined,
       }),
     onSuccess: () => {
-      toast.success("Đã tạo template");
+      toast.success("Đã tạo mẫu");
       setName("");
       setTitle("");
       qc.invalidateQueries({ queryKey: ["templates"] });
     },
-    onError: () => toast.error("Lỗi tạo template"),
+    onError: () => toast.error("Lỗi tạo mẫu"),
   });
 
   const deleteMut = useMutation({
@@ -63,35 +77,39 @@ export default function TemplatesPage() {
   });
 
   const instMut = useMutation({
-    mutationFn: async () =>
-      api.post(`/templates/${instName}/instantiate`, {
-        start_time: new Date(instStart).toISOString(),
-      }),
+    mutationFn: async () => {
+      if (!instStartDate) {
+        throw new Error("Vui lòng chọn ngày và giờ bắt đầu");
+      }
+      return api.post(`/templates/${instName}/instantiate`, {
+        start_time: instStartDate.toISOString(),
+      });
+    },
     onSuccess: () => {
-      toast.success("Đã tạo lịch từ template");
+      toast.success("Đã tạo lịch từ mẫu");
       qc.invalidateQueries({ queryKey: ["schedules"] });
       setInstOpen(false);
     },
-    onError: () => toast.error("Không thể tạo lịch"),
+    onError: (err: Error) => toast.error(err.message || "Không thể tạo lịch"),
   });
 
   return (
     <div className="container space-y-6 py-6 md:py-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Template</h1>
-        <p className="mt-1 text-sm text-muted-foreground md:text-base">Lưu preset để clone nhanh thành lịch mới</p>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Mẫu lịch</h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">Lưu mẫu để nhân bản nhanh thành lịch mới</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Tạo template mới</CardTitle>
+          <CardTitle>Tạo mẫu mới</CardTitle>
           <CardDescription>
             Đặt tên ngắn gọn (a-z, 0-9, -, _), khi cần dùng chỉ việc bấm &quot;Tạo lịch&quot;
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label>Tên template</Label>
+            <Label>Tên mẫu</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="hop-tuan" />
           </div>
           <div className="space-y-2">
@@ -111,7 +129,7 @@ export default function TemplatesPage() {
               onClick={() => createMut.mutate()}
               disabled={!name || !title || createMut.isPending}
             >
-              Tạo template
+              Tạo mẫu
             </Button>
           </div>
         </CardContent>
@@ -129,7 +147,8 @@ export default function TemplatesPage() {
                 size="sm"
                 onClick={() => {
                   setInstName(t.name);
-                  setInstStart("");
+                  setInstDate("");
+                  setInstTime("");
                   setInstOpen(true);
                 }}
                 className="gap-1"
@@ -140,9 +159,7 @@ export default function TemplatesPage() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => {
-                  if (confirm(`Xoá template "${t.name}"?`)) deleteMut.mutate(t.name);
-                }}
+                onClick={() => setPendingDelete(t.name)}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
@@ -150,25 +167,36 @@ export default function TemplatesPage() {
           </Card>
         ))}
         {(data?.length ?? 0) === 0 && (
-          <p className="col-span-full text-muted-foreground">Chưa có template nào.</p>
+          <p className="col-span-full text-muted-foreground">Chưa có mẫu nào.</p>
         )}
       </div>
 
       <Dialog open={instOpen} onOpenChange={setInstOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Tạo lịch từ template &quot;{instName}&quot;</DialogTitle>
+            <DialogTitle>Tạo lịch từ mẫu &quot;{instName}&quot;</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            <Label>Thời gian bắt đầu</Label>
-            <Input
-              type="datetime-local"
-              value={instStart}
-              onChange={(e) => setInstStart(e.target.value)}
-            />
+            <Label>Thời gian bắt đầu *</Label>
+            <div className="grid grid-cols-[1fr_120px] gap-2">
+              <Input
+                type="date"
+                aria-label="Ngày bắt đầu"
+                value={instDate}
+                onChange={(e) => setInstDate(e.target.value)}
+                required
+              />
+              <Input
+                type="time"
+                aria-label="Giờ bắt đầu"
+                value={instTime}
+                onChange={(e) => setInstTime(e.target.value)}
+                required
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
-              {instStart && !Number.isNaN(new Date(instStart).getTime())
-                ? format(new Date(instStart), "EEEE, dd/MM/yyyy HH:mm", { locale: vi })
+              {instStartDate
+                ? format(instStartDate, "EEEE, dd/MM/yyyy HH:mm", { locale: vi })
                 : "VD: 01/05/2026 14:30"}
             </p>
           </div>
@@ -178,13 +206,35 @@ export default function TemplatesPage() {
             </Button>
             <Button
               onClick={() => instMut.mutate()}
-              disabled={!instStart || instMut.isPending}
+              disabled={!instStartDate || instMut.isPending}
             >
               Tạo lịch
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Xoá mẫu này?"
+        description={
+          pendingDelete
+            ? `Mẫu "${pendingDelete}" sẽ bị xoá vĩnh viễn. Các lịch đã tạo trước đó vẫn giữ nguyên.`
+            : undefined
+        }
+        confirmLabel="Xoá"
+        cancelLabel="Huỷ"
+        destructive
+        onConfirm={() => {
+          if (pendingDelete) {
+            deleteMut.mutate(pendingDelete);
+            setPendingDelete(null);
+          }
+        }}
+      />
     </div>
   );
 }
