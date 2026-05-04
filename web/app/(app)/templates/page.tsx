@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 import type { ScheduleTemplate } from "@smartschedule/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -164,6 +166,11 @@ export default function TemplatesPage() {
               value={instStart}
               onChange={(e) => setInstStart(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              {instStart && !Number.isNaN(new Date(instStart).getTime())
+                ? format(new Date(instStart), "EEEE, dd/MM/yyyy HH:mm", { locale: vi })
+                : "VD: 01/05/2026 14:30"}
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setInstOpen(false)}>

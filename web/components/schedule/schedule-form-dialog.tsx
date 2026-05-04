@@ -7,13 +7,17 @@ import {
   PRIORITIES,
   PRIORITY_LABEL_VI,
   ITEM_TYPES,
+  ITEM_TYPE_LABEL_VI,
   RECURRENCES,
+  RECURRENCE_LABEL_VI,
   type CreateScheduleRequest,
   type Schedule,
   type SchedulePriority,
   type ScheduleItemType,
   type RecurrenceType,
 } from "@smartschedule/shared";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +54,13 @@ function toDatetimeLocal(iso: string | null | undefined): string {
 
 function fromDatetimeLocal(local: string): string {
   return new Date(local).toISOString();
+}
+
+function previewDatetimeVi(local: string): string | null {
+  if (!local) return null;
+  const d = new Date(local);
+  if (Number.isNaN(d.getTime())) return null;
+  return format(d, "EEEE, dd/MM/yyyy HH:mm", { locale: vi });
 }
 
 export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
@@ -162,6 +173,9 @@ export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
                 onChange={(e) => setStartTime(e.target.value)}
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                {previewDatetimeVi(startTime) ?? "VD: 01/05/2026 14:30"}
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="end">Kết thúc</Label>
@@ -171,6 +185,9 @@ export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                {previewDatetimeVi(endTime) ?? "Tuỳ chọn"}
+              </p>
             </div>
           </div>
 
@@ -182,6 +199,9 @@ export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
               value={remindAt}
               onChange={(e) => setRemindAt(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              {previewDatetimeVi(remindAt) ?? "Tuỳ chọn — để trống nếu không nhắc"}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -194,7 +214,7 @@ export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
                 <SelectContent>
                   {ITEM_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>
-                      {t}
+                      {ITEM_TYPE_LABEL_VI[t]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -224,7 +244,7 @@ export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
                 <SelectContent>
                   {RECURRENCES.map((r) => (
                     <SelectItem key={r} value={r}>
-                      {r}
+                      {RECURRENCE_LABEL_VI[r]}
                     </SelectItem>
                   ))}
                 </SelectContent>
