@@ -12,6 +12,7 @@ import {
   Menu,
   Search,
   Settings,
+  Share2,
   Sparkles,
   Tag as TagIcon,
   X,
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/search", label: "Tìm kiếm", icon: Search },
   { href: "/tags", label: "Nhãn", icon: TagIcon },
   { href: "/templates", label: "Mẫu lịch", icon: LayoutTemplate },
+  { href: "/shared", label: "Chia sẻ với tôi", icon: Share2 },
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 

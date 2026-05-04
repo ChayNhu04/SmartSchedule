@@ -209,4 +209,62 @@ describe('UsersService', () => {
       );
     });
   });
+
+  describe('lookupByEmail', () => {
+    it('should return minimal user info when found', async () => {
+      mockUsersRepository.findOne.mockResolvedValue(mockUser);
+
+      const result = await service.lookupByEmail('test@example.com');
+
+      expect(mockUsersRepository.findOne).toHaveBeenCalledWith({
+        where: { email: 'test@example.com' },
+      });
+      expect(result).toEqual({
+        id: userId,
+        email: 'test@example.com',
+        display_name: 'Test User',
+      });
+    });
+
+    it('should normalize email to lowercase + trim', async () => {
+      mockUsersRepository.findOne.mockResolvedValue(mockUser);
+
+      await service.lookupByEmail('  Test@Example.COM  ');
+
+      expect(mockUsersRepository.findOne).toHaveBeenCalledWith({
+        where: { email: 'test@example.com' },
+      });
+    });
+
+    it('should throw NotFoundException for empty email', async () => {
+      await expect(service.lookupByEmail('')).rejects.toThrow(NotFoundException);
+      await expect(service.lookupByEmail('   ')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw NotFoundException when user does not exist', async () => {
+      mockUsersRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.lookupByEmail('nobody@example.com'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should not leak password_hash or push token', async () => {
+      mockUsersRepository.findOne.mockResolvedValue({
+        ...mockUser,
+        password_hash: 'super-secret-hash',
+        expo_push_token: 'ExponentPushToken[secret]',
+      });
+
+      const result = await service.lookupByEmail('test@example.com');
+
+      expect(result).not.toHaveProperty('password_hash');
+      expect(result).not.toHaveProperty('expo_push_token');
+      expect(Object.keys(result).sort()).toEqual(
+        ['display_name', 'email', 'id'].sort(),
+      );
+    });
+  });
 });
