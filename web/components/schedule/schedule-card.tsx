@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { format, isToday, isPast } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Check, Pencil, Trash2, Repeat, Clock } from "lucide-react";
@@ -7,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Schedule } from "@smartschedule/shared";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { PRIORITY_BAR_CLASS } from "@/lib/priority";
@@ -29,6 +31,7 @@ function formatRange(start: string, end?: string | null) {
 
 export function ScheduleCard({ schedule, onEdit }: Props) {
   const qc = useQueryClient();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const isOverdue =
     schedule.status === "pending" && isPast(new Date(schedule.start_time));
 
@@ -127,9 +130,7 @@ export function ScheduleCard({ schedule, onEdit }: Props) {
               variant="ghost"
               className="h-8 w-8"
               title="Xoá"
-              onClick={() => {
-                if (confirm("Xoá lịch này?")) deleteMut.mutate();
-              }}
+              onClick={() => setConfirmOpen(true)}
               disabled={deleteMut.isPending}
             >
               <Trash2 className="h-4 w-4 text-destructive" />
@@ -175,6 +176,17 @@ export function ScheduleCard({ schedule, onEdit }: Props) {
           ))}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Xoá lịch này?"
+        description={`"${schedule.title}" sẽ bị xoá vĩnh viễn. Hành động này không thể hoàn tác.`}
+        confirmLabel="Xoá"
+        cancelLabel="Huỷ"
+        destructive
+        onConfirm={() => deleteMut.mutate()}
+      />
     </div>
   );
 }

@@ -30,8 +30,13 @@ export default function SettingsPage() {
   const [timezone, setTimezone] = useState("");
   const [defaultRemind, setDefaultRemind] = useState(30);
   const [notifyPush, setNotifyPush] = useState(true);
-  const [workStart, setWorkStart] = useState(0);
-  const [workEnd, setWorkEnd] = useState(0);
+  const [workStart, setWorkStart] = useState(8);
+  const [workEnd, setWorkEnd] = useState(17);
+
+  const workHoursError =
+    workEnd <= workStart
+      ? "Giờ kết thúc phải lớn hơn giờ bắt đầu"
+      : null;
 
   useEffect(() => {
     if (data) {
@@ -44,19 +49,23 @@ export default function SettingsPage() {
   }, [data]);
 
   const mut = useMutation({
-    mutationFn: async () =>
-      api.patch("/users/me/settings", {
+    mutationFn: async () => {
+      if (workHoursError) {
+        throw new Error(workHoursError);
+      }
+      return api.patch("/users/me/settings", {
         timezone,
         default_remind_minutes: defaultRemind,
         notify_via_push: notifyPush,
         work_start_hour: workStart,
         work_end_hour: workEnd,
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success("Đã lưu cài đặt");
       qc.invalidateQueries({ queryKey: ["user-settings"] });
     },
-    onError: () => toast.error("Lỗi lưu cài đặt"),
+    onError: (err: Error) => toast.error(err.message || "Lỗi lưu cài đặt"),
   });
 
   return (
@@ -96,7 +105,7 @@ export default function SettingsPage() {
             />
           </div>
           <div className="flex items-center justify-between">
-            <Label htmlFor="push">Gửi push notification</Label>
+            <Label htmlFor="push">Bật thông báo đẩy</Label>
             <Switch id="push" checked={notifyPush} onCheckedChange={setNotifyPush} />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -121,7 +130,13 @@ export default function SettingsPage() {
               />
             </div>
           </div>
-          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
+          {workHoursError && (
+            <p className="text-sm text-destructive">{workHoursError}</p>
+          )}
+          <Button
+            onClick={() => mut.mutate()}
+            disabled={mut.isPending || !!workHoursError}
+          >
             {mut.isPending ? "Đang lưu..." : "Lưu thay đổi"}
           </Button>
         </CardContent>

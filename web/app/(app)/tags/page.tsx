@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { api } from "@/lib/api";
 
 export default function TagsPage() {
   const qc = useQueryClient();
   const [name, setName] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["tags"],
@@ -68,9 +70,7 @@ export default function TagsPage() {
             <Badge key={t.id} variant="secondary" className="gap-2 px-3 py-1.5 text-sm">
               #{t.name}
               <button
-                onClick={() => {
-                  if (confirm(`Xoá tag "${t.name}"?`)) deleteMut.mutate(t.name);
-                }}
+                onClick={() => setPendingDelete(t.name)}
                 className="ml-1 rounded hover:text-destructive"
                 title="Xoá"
               >
@@ -80,6 +80,28 @@ export default function TagsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Xoá nhãn này?"
+        description={
+          pendingDelete
+            ? `Nhãn "${pendingDelete}" sẽ bị xoá và gỡ khỏi tất cả lịch đang dùng.`
+            : undefined
+        }
+        confirmLabel="Xoá"
+        cancelLabel="Huỷ"
+        destructive
+        onConfirm={() => {
+          if (pendingDelete) {
+            deleteMut.mutate(pendingDelete);
+            setPendingDelete(null);
+          }
+        }}
+      />
     </div>
   );
 }

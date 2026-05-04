@@ -76,6 +76,12 @@ export default function CalendarPage() {
           footerToolbar={{
             center: "dayGridMonth,timeGridWeek,timeGridDay",
           }}
+          buttonText={{
+            today: "Hôm nay",
+            month: "Tháng",
+            week: "Tuần",
+            day: "Ngày",
+          }}
           events={events}
           height="auto"
           locale="vi"
