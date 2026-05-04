@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { bucketForStartTime, visibleOnPath } from "@/lib/schedule-bucket";
 import type { ScheduleTemplate } from "@smartschedule/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +40,8 @@ function combineLocalDateTime(date: string, time: string): Date | null {
 
 export default function TemplatesPage() {
   const qc = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(60);
@@ -86,7 +90,25 @@ export default function TemplatesPage() {
       });
     },
     onSuccess: () => {
-      toast.success("Đã tạo lịch từ mẫu");
+      const iso = instStartDate ? instStartDate.toISOString() : null;
+      if (iso && !visibleOnPath(pathname, iso)) {
+        const b = bucketForStartTime(iso);
+        const phrase =
+          b.key === "overdue"
+            ? "Đã tạo. Lịch này đang quá hạn."
+            : b.key === "today"
+              ? "Đã tạo. Lịch hôm nay."
+              : "Đã tạo. Lịch sắp tới.";
+        toast.success(phrase, {
+          action: {
+            label: `Xem ở ${b.label}`,
+            onClick: () => router.push(b.path),
+          },
+          duration: 6000,
+        });
+      } else {
+        toast.success("Đã tạo lịch từ mẫu");
+      }
       qc.invalidateQueries({ queryKey: ["schedules"] });
       setInstOpen(false);
     },

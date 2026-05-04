@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { bucketForStartTime, visibleOnPath } from "@/lib/schedule-bucket";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import {
   PRIORITIES,
@@ -133,6 +135,8 @@ function previewDatetimeVi(local: string): string | null {
 
 export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
   const qc = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
   const isEdit = !!schedule;
 
   const [title, setTitle] = useState("");
@@ -214,7 +218,26 @@ export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
       }
     },
     onSuccess: () => {
-      toast.success(isEdit ? "Đã cập nhật" : "Đã tạo lịch");
+      const verb = isEdit ? "Đã cập nhật" : "Đã tạo";
+      const iso = startIso;
+      if (iso && !visibleOnPath(pathname, iso)) {
+        const b = bucketForStartTime(iso);
+        const phrase =
+          b.key === "overdue"
+            ? `${verb}. Lịch này đang quá hạn.`
+            : b.key === "today"
+              ? `${verb}. Lịch hôm nay.`
+              : `${verb}. Lịch sắp tới.`;
+        toast.success(phrase, {
+          action: {
+            label: `Xem ở ${b.label}`,
+            onClick: () => router.push(b.path),
+          },
+          duration: 6000,
+        });
+      } else {
+        toast.success(isEdit ? "Đã cập nhật" : "Đã tạo lịch");
+      }
       qc.invalidateQueries({ queryKey: ["schedules"] });
       onOpenChange(false);
     },
