@@ -18,6 +18,7 @@ export default function UpcomingPage() {
       description="50 lịch pending sắp tới gần nhất"
       schedules={data ?? []}
       loading={isLoading}
+      showQuickAdd
     />
   );
 }

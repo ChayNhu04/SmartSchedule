@@ -19,6 +19,7 @@ export default function TodayPage() {
       loading={isLoading}
       emptyTitle="Hôm nay không có lịch nào"
       emptyDescription="Một ngày trống — tận hưởng nhé! Thêm lịch nếu cần lập kế hoạch."
+      showQuickAdd
     />
   );
 }
