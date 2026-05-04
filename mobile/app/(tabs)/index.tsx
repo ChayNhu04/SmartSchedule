@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { FlatList, RefreshControl } from "react-native";
+import { router } from "expo-router";
 import { ScheduleCard } from "../../components/ScheduleCard";
 import { Screen } from "../../components/Screen";
 import { EmptyState } from "../../components/EmptyState";
@@ -24,7 +25,12 @@ export default function TodayScreen() {
         <FlatList
           data={data ?? []}
           keyExtractor={(s) => String(s.id)}
-          renderItem={({ item }) => <ScheduleCard schedule={item} />}
+          renderItem={({ item }) => (
+            <ScheduleCard
+              schedule={item}
+              onPress={() => router.push(`/schedule/${item.id}` as never)}
+            />
+          )}
           ListEmptyComponent={
             <EmptyState
               icon="sunny-outline"

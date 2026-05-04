@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FlatList, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { ScheduleCard } from "../../components/ScheduleCard";
 import { Screen } from "../../components/Screen";
 import { Input } from "../../components/Input";
@@ -60,7 +61,12 @@ export default function SearchScreen() {
         <FlatList
           data={data ?? []}
           keyExtractor={(s) => String(s.id)}
-          renderItem={({ item }) => <ScheduleCard schedule={item} />}
+          renderItem={({ item }) => (
+            <ScheduleCard
+              schedule={item}
+              onPress={() => router.push(`/schedule/${item.id}` as never)}
+            />
+          )}
           contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}
         />
       )}

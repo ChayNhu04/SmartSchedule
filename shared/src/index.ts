@@ -32,9 +32,9 @@ export const ITEM_TYPE_LABEL_VI: Record<ScheduleItemType, string> = {
 
 export const RECURRENCE_LABEL_VI: Record<RecurrenceType, string> = {
   none: 'Không lặp',
-  daily: 'Hàng ngày',
-  weekly: 'Hàng tuần',
-  monthly: 'Hàng tháng',
+  daily: 'Hằng ngày',
+  weekly: 'Hằng tuần',
+  monthly: 'Hằng tháng',
 };
 
 export interface AuthUser {

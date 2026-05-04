@@ -98,7 +98,7 @@ export function ScheduleCard({ schedule, onEdit }: Props) {
             )}
           </div>
 
-          <div className="flex shrink-0 -mr-1 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+          <div className="flex shrink-0 -mr-1 items-center gap-0.5">
             {schedule.status === "pending" && (
               <Button
                 size="icon"
