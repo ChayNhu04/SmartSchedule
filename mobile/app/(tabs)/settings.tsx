@@ -346,6 +346,50 @@ export default function SettingsScreen() {
               color={colors.textSubtle}
             />
           </Pressable>
+
+          <View
+            style={{
+              height: 1,
+              backgroundColor: colors.border,
+              marginVertical: spacing.md,
+            }}
+          />
+
+          <Pressable
+            onPress={() => router.push("/templates" as never)}
+            style={({ pressed }) => [
+              styles.linkRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+            accessibilityLabel="Mở trang mẫu lịch"
+          >
+            <View
+              style={[
+                styles.linkIconWrap,
+                { backgroundColor: colors.primaryMuted },
+              ]}
+            >
+              <Ionicons name="copy-outline" size={18} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.bodyStrong, { color: colors.text }]}>
+                Mẫu lịch
+              </Text>
+              <Text
+                style={[
+                  typography.caption,
+                  { color: colors.textMuted, marginTop: 2 },
+                ]}
+              >
+                Lưu mẫu để nhân bản nhanh thành lịch mới.
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={colors.textSubtle}
+            />
+          </Pressable>
         </View>
 
         {/* About card */}
