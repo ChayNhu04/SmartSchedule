@@ -48,7 +48,8 @@ export class RemindersService {
       const settings = s.user?.settings;
       const repeat = settings?.default_remind_minutes ?? DEFAULT_REPEAT_MINUTES;
       const token = s.user?.expo_push_token;
-      if (token) {
+      const pushEnabled = settings?.notify_via_push ?? true;
+      if (token && pushEnabled) {
         await this.push.send([
           {
             to: token,
@@ -74,7 +75,7 @@ export class RemindersService {
         end_notified_at: IsNull(),
         status: 'pending',
       },
-      relations: ['user'],
+      relations: ['user', 'user.settings'],
       order: { end_time: 'ASC' },
       take: 100,
     });
@@ -82,7 +83,8 @@ export class RemindersService {
 
     for (const s of due) {
       const token = s.user?.expo_push_token;
-      if (token) {
+      const pushEnabled = s.user?.settings?.notify_via_push ?? true;
+      if (token && pushEnabled) {
         await this.push.send([
           {
             to: token,
