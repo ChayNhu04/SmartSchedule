@@ -18,6 +18,8 @@ import {
   type ScheduleItemType,
   type RecurrenceType,
 } from "@smartschedule/shared";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -120,6 +122,13 @@ function DateTimeField({
       </div>
     </div>
   );
+}
+
+function previewDatetimeVi(local: string): string | null {
+  if (!local) return null;
+  const d = new Date(local);
+  if (Number.isNaN(d.getTime())) return null;
+  return format(d, "EEEE, dd/MM/yyyy HH:mm", { locale: vi });
 }
 
 export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {
