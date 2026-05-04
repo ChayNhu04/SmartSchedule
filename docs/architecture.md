@@ -203,6 +203,7 @@ Push thực tế đi qua Expo Push Service (`expo-server-sdk`). Chi tiết + cá
 | `/api/users/me/settings` | GET | ✓ | UserSettings |
 | `/api/users/me/settings` | PATCH | ✓ | Update settings |
 | `/api/users/me/push-token` | PATCH | ✓ | Đăng ký Expo Push Token |
+| `/api/users/lookup?email=` | GET | ✓ | Tìm user theo email (cho UI chia sẻ) |
 | `/api/schedules` | POST | ✓ | Tạo lịch |
 | `/api/schedules` | GET | ✓ | List lịch (tất cả) |
 | `/api/schedules/today` | GET | ✓ | Lịch hôm nay |

@@ -80,6 +80,14 @@ export interface Schedule {
   created_at: string;
   updated_at: string;
   tags?: Tag[];
+  /** Owner of the schedule. Returned by GET /shared-with-me. */
+  user?: UserSummary;
+}
+
+export interface UserSummary {
+  id: string;
+  email: string;
+  display_name: string | null;
 }
 
 export interface ScheduleTemplate {

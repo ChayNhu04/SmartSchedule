@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format, isToday, isPast } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Check, Pencil, Trash2, Repeat, Clock } from "lucide-react";
+import { Check, Pencil, Share2, Trash2, Repeat, Clock } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Schedule } from "@smartschedule/shared";
@@ -13,10 +13,13 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { PRIORITY_BAR_CLASS } from "@/lib/priority";
 import { PriorityBadge } from "./priority-badge";
+import { ShareDialog } from "./share-dialog";
 
 interface Props {
   schedule: Schedule;
   onEdit?: (schedule: Schedule) => void;
+  /** When true, hide owner-only actions (complete/edit/share/delete). */
+  readOnly?: boolean;
 }
 
 function formatRange(start: string, end?: string | null) {
@@ -29,9 +32,10 @@ function formatRange(start: string, end?: string | null) {
   return endTime ? `${dayLabel} • ${time} – ${endTime}` : `${dayLabel} • ${time}`;
 }
 
-export function ScheduleCard({ schedule, onEdit }: Props) {
+export function ScheduleCard({ schedule, onEdit, readOnly }: Props) {
   const qc = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const isOverdue =
     schedule.status === "pending" && isPast(new Date(schedule.start_time));
 
@@ -101,41 +105,52 @@ export function ScheduleCard({ schedule, onEdit }: Props) {
             )}
           </div>
 
-          <div className="flex shrink-0 -mr-1 items-center gap-0.5">
-            {schedule.status === "pending" && (
+          {!readOnly && (
+            <div className="flex shrink-0 -mr-1 items-center gap-0.5">
+              {schedule.status === "pending" && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  title="Hoàn thành"
+                  onClick={() => completeMut.mutate()}
+                  disabled={completeMut.isPending}
+                >
+                  <Check className="h-4 w-4 text-success" />
+                </Button>
+              )}
+              {onEdit && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  title="Sửa"
+                  onClick={() => onEdit(schedule)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 size="icon"
                 variant="ghost"
                 className="h-8 w-8"
-                title="Hoàn thành"
-                onClick={() => completeMut.mutate()}
-                disabled={completeMut.isPending}
+                title="Chia sẻ"
+                onClick={() => setShareOpen(true)}
               >
-                <Check className="h-4 w-4 text-success" />
+                <Share2 className="h-4 w-4" />
               </Button>
-            )}
-            {onEdit && (
               <Button
                 size="icon"
                 variant="ghost"
                 className="h-8 w-8"
-                title="Sửa"
-                onClick={() => onEdit(schedule)}
+                title="Xoá"
+                onClick={() => setConfirmOpen(true)}
+                disabled={deleteMut.isPending}
               >
-                <Pencil className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
-            )}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8"
-              title="Xoá"
-              onClick={() => setConfirmOpen(true)}
-              disabled={deleteMut.isPending}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
@@ -174,19 +189,35 @@ export function ScheduleCard({ schedule, onEdit }: Props) {
               #{t.name}
             </span>
           ))}
+
+          {readOnly && schedule.user && (
+            <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              Từ {schedule.user.display_name || schedule.user.email}
+            </span>
+          )}
         </div>
       </div>
 
-      <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title="Xoá lịch này?"
-        description={`"${schedule.title}" sẽ bị xoá vĩnh viễn. Hành động này không thể hoàn tác.`}
-        confirmLabel="Xoá"
-        cancelLabel="Huỷ"
-        destructive
-        onConfirm={() => deleteMut.mutate()}
-      />
+      {!readOnly && (
+        <>
+          <ConfirmDialog
+            open={confirmOpen}
+            onOpenChange={setConfirmOpen}
+            title="Xoá lịch này?"
+            description={`"${schedule.title}" sẽ bị xoá vĩnh viễn. Hành động này không thể hoàn tác.`}
+            confirmLabel="Xoá"
+            cancelLabel="Huỷ"
+            destructive
+            onConfirm={() => deleteMut.mutate()}
+          />
+          <ShareDialog
+            open={shareOpen}
+            onOpenChange={setShareOpen}
+            scheduleId={schedule.id}
+            scheduleTitle={schedule.title}
+          />
+        </>
+      )}
     </div>
   );
 }

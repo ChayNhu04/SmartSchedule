@@ -94,10 +94,10 @@ Tài liệu cho **người dùng cuối** SmartSchedule. Có 2 client:
 
 ---
 
-## 6. Template (chỉ web)
+## 6. Mẫu lịch (Template)
 
-- **Web**: trang `/templates`. Tạo template (tên + tiêu đề mặc định + duration + remind + priority), instantiate thành 1 lịch mới chỉ với 1 click.
-- **Mobile**: ✗ chưa có UI. Endpoint backend đã có (`GET/POST /templates`, `POST /templates/:name/instantiate`) — **đề xuất bổ sung UI mobile**.
+- **Web**: trang `/templates`. Tạo mẫu (tên + tiêu đề + duration + remind + priority) → "Tạo lịch" để nhân bản nhanh thành lịch mới. Có 4 preset gợi ý cho user mới (Họp tuần, Sprint review, Uống thuốc, Gym).
+- **Mobile**: Settings → Quản lý → "Mẫu lịch". Cùng tính năng (tạo, xoá, instantiate, preset). Modal date/time để chọn thời gian khi tạo lịch từ mẫu.
 
 Use case: ghi nhớ kịch bản hay lặp lại như "Họp scrum 9h sáng 30 phút" → instantiate nhanh.
 
@@ -105,12 +105,18 @@ Use case: ghi nhớ kịch bản hay lặp lại như "Họp scrum 9h sáng 30 p
 
 ## 7. Chia sẻ lịch
 
-- Backend đã có endpoint:
-  - `POST /schedules/:id/shares` — chia sẻ 1 lịch cho user khác (theo email/userId — cần kiểm tra DTO).
-  - `DELETE /schedules/:id/shares/:targetId` — gỡ chia sẻ.
-  - `GET /schedules/:id/shares` — list user đang được chia sẻ.
-  - `GET /shared-with-me` — list lịch người khác chia sẻ cho mình.
-- **UI**: ✗ web + mobile đều chưa có. **Đề xuất bổ sung** trên cả 2 client.
+- **Web**:
+  - Trên mỗi schedule card: nút icon **Share** → mở dialog tìm user theo email → "Chia sẻ" → người kia thấy lịch ở mục "Chia sẻ với tôi".
+  - Sidebar: **Chia sẻ với tôi** (`/shared`) — list lịch người khác chia sẻ cho mình. Read-only (không sửa/xoá), có badge "Từ <tên người chia sẻ>".
+  - Dialog có thể gỡ share đã có.
+- **Mobile**: ✗ chưa có UI. Backend endpoint sẵn sàng — **đề xuất bổ sung** mobile share dialog + screen "Chia sẻ với tôi".
+
+Backend endpoint:
+- `POST /schedules/:id/shares` — body `{ target_user_id }`.
+- `DELETE /schedules/:id/shares/:targetId` — gỡ.
+- `GET /schedules/:id/shares` — list user đang nhận share.
+- `GET /shared-with-me` — list lịch người khác chia sẻ cho user hiện tại.
+- `GET /users/lookup?email=` — tìm user theo email (chỉ trả id + email + display_name).
 
 ---
 
@@ -145,9 +151,9 @@ Trang `/settings` — cần kiểm tra UI hiện tại có những gì.
 | Quá hạn | ✓ | ✓ | ✗ |
 | Calendar view | ✓ | ✓ | ✗ |
 | Tìm kiếm | ✓ | ✓ | ✓ |
-| Tag | ✓ | ✓ | ✗ |
-| Template | ✓ | ✓ | ✗ |
-| Chia sẻ lịch | ✓ | ✗ | ✗ |
+| Tag | ✓ | ✓ | ✓ |
+| Template | ✓ | ✓ | ✓ |
+| Chia sẻ lịch | ✓ | ✓ (dialog + trang `/shared`) | ✗ |
 | Audit log | ✓ | cần kiểm tra | cần kiểm tra |
 | Push notification (cron + Expo) | ✓ | — | đã có service nhưng **chưa được gọi** (xem [`notifications.md`](./notifications.md)) |
 | Recurrence (lặp daily/weekly/monthly) | có cột DB + DTO, **logic sinh occurrences cần kiểm tra** | tạo được | tạo được |

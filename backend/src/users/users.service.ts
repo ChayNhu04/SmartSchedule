@@ -31,4 +31,14 @@ export class UsersService {
   findById(id: string): Promise<User | null> {
     return this.users.findOne({ where: { id }, relations: ['settings'] });
   }
+
+  async lookupByEmail(
+    email: string,
+  ): Promise<{ id: string; email: string; display_name: string | null }> {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) throw new NotFoundException('Email không được để trống');
+    const u = await this.users.findOne({ where: { email: trimmed } });
+    if (!u) throw new NotFoundException('Không tìm thấy người dùng');
+    return { id: u.id, email: u.email, display_name: u.display_name };
+  }
 }
