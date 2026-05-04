@@ -89,6 +89,13 @@ interface DateTimeFieldProps {
   onTimeChange: (v: string) => void;
 }
 
+function previewDatetimeVi(local: string): string | null {
+  if (!local) return null;
+  const d = new Date(local);
+  if (Number.isNaN(d.getTime())) return null;
+  return format(d, "EEEE, dd/MM/yyyy HH:mm", { locale: vi });
+}
+
 function DateTimeField({
   idPrefix,
   label,
@@ -98,6 +105,7 @@ function DateTimeField({
   onDateChange,
   onTimeChange,
 }: DateTimeFieldProps) {
+  const preview = date && time ? previewDatetimeVi(`${date}T${time}`) : null;
   return (
     <div className="space-y-2">
       <Label>
@@ -122,15 +130,14 @@ function DateTimeField({
           required={required}
         />
       </div>
+      <p
+        className="min-h-[1rem] text-xs text-muted-foreground"
+        aria-live="polite"
+      >
+        {preview ?? "Định dạng: ngày/tháng/năm – giờ 24h (vd 14:30)"}
+      </p>
     </div>
   );
-}
-
-function previewDatetimeVi(local: string): string | null {
-  if (!local) return null;
-  const d = new Date(local);
-  if (Number.isNaN(d.getTime())) return null;
-  return format(d, "EEEE, dd/MM/yyyy HH:mm", { locale: vi });
 }
 
 export function ScheduleFormDialog({ open, onOpenChange, schedule }: Props) {

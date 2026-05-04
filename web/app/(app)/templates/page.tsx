@@ -38,6 +38,35 @@ function combineLocalDateTime(date: string, time: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+interface PresetTemplate {
+  name: string;
+  title: string;
+  duration_minutes: number;
+  emoji: string;
+}
+
+const PRESET_TEMPLATES: PresetTemplate[] = [
+  {
+    name: "hop-tuan",
+    title: "Họp tuần với team",
+    duration_minutes: 60,
+    emoji: "👥",
+  },
+  {
+    name: "review-sprint",
+    title: "Sprint review",
+    duration_minutes: 90,
+    emoji: "🧭",
+  },
+  {
+    name: "uong-thuoc",
+    title: "Nhắc uống thuốc",
+    duration_minutes: 5,
+    emoji: "💊",
+  },
+  { name: "gym", title: "Tập gym", duration_minutes: 60, emoji: "🏋️" },
+];
+
 export default function TemplatesPage() {
   const qc = useQueryClient();
   const router = useRouter();
@@ -78,6 +107,31 @@ export default function TemplatesPage() {
   const deleteMut = useMutation({
     mutationFn: async (n: string) => api.delete(`/templates/${n}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["templates"] }),
+  });
+
+  const createPresetMut = useMutation({
+    mutationFn: async (preset: PresetTemplate) =>
+      api.post("/templates", {
+        name: preset.name,
+        title: preset.title,
+        duration_minutes: preset.duration_minutes,
+      }),
+    onSuccess: (_, preset) => {
+      toast.success(`Đã thêm mẫu "${preset.title}"`);
+      qc.invalidateQueries({ queryKey: ["templates"] });
+    },
+    onError: (err) => {
+      const msg =
+        (
+          err as {
+            response?: { data?: { message?: string | string[] } };
+            message?: string;
+          }
+        )?.response?.data?.message ?? (err as { message?: string })?.message;
+      toast.error(
+        Array.isArray(msg) ? msg[0] : (msg ?? "Không thể thêm mẫu gợi ý"),
+      );
+    },
   });
 
   const instMut = useMutation({
@@ -188,8 +242,39 @@ export default function TemplatesPage() {
             </CardContent>
           </Card>
         ))}
-        {(data?.length ?? 0) === 0 && (
-          <p className="col-span-full text-muted-foreground">Chưa có mẫu nào.</p>
+        {data !== undefined && data.length === 0 && (
+          <Card className="col-span-full border-dashed">
+            <CardHeader>
+              <CardTitle>Chưa có mẫu nào</CardTitle>
+              <CardDescription>
+                Mẫu lịch giúp tạo nhanh các sự kiện hay lặp đi lặp lại. Bấm một
+                gợi ý dưới đây để thử ngay, hoặc tự tạo mẫu mới ở khung phía trên.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {PRESET_TEMPLATES.map((p) => (
+                  <Button
+                    key={p.name}
+                    variant="outline"
+                    className="h-auto justify-start gap-3 px-3 py-3 text-left"
+                    onClick={() => createPresetMut.mutate(p)}
+                    disabled={createPresetMut.isPending}
+                  >
+                    <span aria-hidden className="text-xl leading-none">
+                      {p.emoji}
+                    </span>
+                    <span className="flex flex-1 flex-col items-start">
+                      <span className="font-medium">{p.title}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {p.duration_minutes} phút · tên mẫu &quot;{p.name}&quot;
+                      </span>
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
 
