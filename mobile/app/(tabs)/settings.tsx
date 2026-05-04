@@ -390,6 +390,54 @@ export default function SettingsScreen() {
               color={colors.textSubtle}
             />
           </Pressable>
+
+          <View
+            style={{
+              height: 1,
+              backgroundColor: colors.border,
+              marginVertical: spacing.md,
+            }}
+          />
+
+          <Pressable
+            onPress={() => router.push("/shared" as never)}
+            style={({ pressed }) => [
+              styles.linkRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+            accessibilityLabel="Mở trang lịch được chia sẻ với tôi"
+          >
+            <View
+              style={[
+                styles.linkIconWrap,
+                { backgroundColor: colors.primaryMuted },
+              ]}
+            >
+              <Ionicons
+                name="share-social-outline"
+                size={18}
+                color={colors.primary}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.bodyStrong, { color: colors.text }]}>
+                Chia sẻ với tôi
+              </Text>
+              <Text
+                style={[
+                  typography.caption,
+                  { color: colors.textMuted, marginTop: 2 },
+                ]}
+              >
+                Lịch người khác đã chia sẻ cho bạn.
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={colors.textSubtle}
+            />
+          </Pressable>
         </View>
 
         {/* About card */}
