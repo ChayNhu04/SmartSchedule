@@ -1,4 +1,3 @@
-import { Alert } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import type { CreateScheduleRequest } from "@smartschedule/shared";
@@ -16,14 +15,6 @@ export default function AddScreen() {
 
     const bucket = bucketForStartTime(payload.start_time);
     router.replace(bucket.tabPath as never);
-
-    if (bucket.key === "overdue") {
-      Alert.alert(
-        "Đã tạo lịch",
-        "Lịch này đang quá hạn (mốc bắt đầu nằm trước thời điểm hiện tại). " +
-          "Bạn có thể tìm thấy nó ở tab Hôm nay (nếu cùng ngày) hoặc dùng tab Tìm.",
-      );
-    }
   };
 
   return (

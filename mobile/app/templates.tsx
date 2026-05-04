@@ -114,14 +114,8 @@ export default function TemplatesScreen() {
       qc.invalidateQueries({ queryKey: ["schedules"] });
       setInstOpen(false);
       const bucket = bucketForStartTime(iso);
-      // Navigate to the right tab so user sees the new schedule
+      // Navigate so user sees the new schedule (today/upcoming/overdue).
       router.replace(bucket.tabPath as never);
-      if (bucket.key === "overdue") {
-        Alert.alert(
-          "Đã tạo lịch",
-          "Lịch này đang quá hạn. Đã đưa vào tab Hôm nay.",
-        );
-      }
     },
     onError: (err) => Alert.alert("Lỗi", pickError(err, "Không thể tạo lịch")),
   });

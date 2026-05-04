@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { FlatList, RefreshControl } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import type { Schedule } from "@smartschedule/shared";
 import { ScheduleCard } from "../../components/ScheduleCard";
 import { Screen } from "../../components/Screen";
 import { EmptyState } from "../../components/EmptyState";
 import { ScheduleListSkeleton } from "../../components/Skeleton";
 import { useTheme } from "../../theme/ThemeContext";
-import { spacing } from "../../theme/tokens";
+import { radius, spacing, typography } from "../../theme/tokens";
 import { api } from "../../services/api";
-import type { Schedule } from "../../types/schedule";
 
 export default function TodayScreen() {
   const { colors } = useTheme();
@@ -16,6 +17,51 @@ export default function TodayScreen() {
     queryKey: ["schedules", "today"],
     queryFn: async () => (await api.get<Schedule[]>("/schedules/today")).data,
   });
+
+  // Lightweight count query — refetches in parallel; doesn't block today list.
+  const overdueQuery = useQuery({
+    queryKey: ["schedules", "overdue"],
+    queryFn: async () =>
+      (await api.get<Schedule[]>("/schedules/overdue")).data,
+  });
+  const overdueCount = overdueQuery.data?.length ?? 0;
+
+  const overdueBanner =
+    overdueCount > 0 ? (
+      <Pressable
+        onPress={() => router.push("/overdue" as never)}
+        style={({ pressed }) => [
+          styles.banner,
+          {
+            backgroundColor: colors.destructiveMuted,
+            borderColor: colors.destructive,
+            opacity: pressed ? 0.85 : 1,
+          },
+        ]}
+        accessibilityLabel={`Mở danh sách ${overdueCount} lịch quá hạn`}
+      >
+        <Ionicons
+          name="alert-circle"
+          size={20}
+          color={colors.destructive}
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={[typography.bodyStrong, { color: colors.destructive }]}>
+            {overdueCount} lịch quá hạn
+          </Text>
+          <Text
+            style={[typography.caption, { color: colors.destructive, opacity: 0.85 }]}
+          >
+            Bấm để xem và xử lý.
+          </Text>
+        </View>
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color={colors.destructive}
+        />
+      </Pressable>
+    ) : null;
 
   return (
     <Screen title="Hôm nay" subtitle="Lịch trong ngày">
@@ -31,6 +77,7 @@ export default function TodayScreen() {
               onPress={() => router.push(`/schedule/${item.id}` as never)}
             />
           )}
+          ListHeaderComponent={overdueBanner}
           ListEmptyComponent={
             <EmptyState
               icon="sunny-outline"
@@ -41,7 +88,10 @@ export default function TodayScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
-              onRefresh={refetch}
+              onRefresh={() => {
+                refetch();
+                overdueQuery.refetch();
+              }}
               tintColor={colors.primary}
             />
           }
@@ -51,3 +101,16 @@ export default function TodayScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+});
