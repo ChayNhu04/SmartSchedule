@@ -198,6 +198,12 @@ export default function ScheduleDetailScreen() {
             onPress={() => router.push(`/schedule/${data.id}/edit` as never)}
           />
           <Button
+            label="Chia sẻ"
+            variant="secondary"
+            size="lg"
+            onPress={() => router.push(`/schedule/${data.id}/share` as never)}
+          />
+          <Button
             label="Xoá"
             variant="destructive"
             size="lg"
