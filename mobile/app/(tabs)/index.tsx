@@ -7,6 +7,7 @@ import { ScheduleCard } from "../../components/ScheduleCard";
 import { Screen } from "../../components/Screen";
 import { EmptyState } from "../../components/EmptyState";
 import { ScheduleListSkeleton } from "../../components/Skeleton";
+import { QuickAdd } from "../../components/QuickAdd";
 import { useTheme } from "../../theme/ThemeContext";
 import { radius, spacing, typography } from "../../theme/tokens";
 import { api } from "../../services/api";
@@ -63,6 +64,13 @@ export default function TodayScreen() {
       </Pressable>
     ) : null;
 
+  const header = (
+    <View>
+      <QuickAdd />
+      {overdueBanner}
+    </View>
+  );
+
   return (
     <Screen title="Hôm nay" subtitle="Lịch trong ngày">
       {isLoading ? (
@@ -77,7 +85,7 @@ export default function TodayScreen() {
               onPress={() => router.push(`/schedule/${item.id}` as never)}
             />
           )}
-          ListHeaderComponent={overdueBanner}
+          ListHeaderComponent={header}
           ListEmptyComponent={
             <EmptyState
               icon="sunny-outline"

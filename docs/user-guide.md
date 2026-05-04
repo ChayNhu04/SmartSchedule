@@ -55,6 +55,24 @@ Tài liệu cho **người dùng cuối** SmartSchedule. Có 2 client:
 - Ngày/giờ không hợp lệ (vd `31/02/2026`, `99:99`) → app báo "Thời gian không hợp lệ", không gửi lên server.
 - Server backend tự reject nếu thiếu trường bắt buộc — xem `backend/src/schedules/dto/`.
 
+### Thêm nhanh (natural language)
+Trên màn **Hôm nay** (web + mobile) và **Sắp tới** (web) có một ô "Thêm nhanh" ở đầu danh sách. Bạn gõ một câu tiếng Việt và app sẽ tự parse ra tiêu đề + thời gian.
+
+Ví dụ hợp lệ:
+- `mai 9h họp scrum`
+- `tối nay học bài`
+- `15/5 14h chiều cafe với Linh`
+- `mốt 8h Review sprint`
+- `9h ăn sáng` (nếu hiện tại đã quá 9h thì sẽ tự bump sang 9h sáng mai)
+
+Hỗ trợ:
+- **Ngày tương đối**: `hôm nay` / `nay`, `mai` / `ngày mai`, `kia` / `mốt`.
+- **Ngày tuyệt đối**: `dd/mm` hoặc `dd/mm/yyyy` (vd `15/5`, `15/05/2027`).
+- **Giờ**: `9h`, `9h30`, `9:30`, `9 giờ`, `9 giờ 30`.
+- **Buổi**: `sáng` (mặc định 9h), `trưa` (12h), `chiều` (14h, cộng 12 nếu giờ ≤ 12), `tối` (19h, cộng 12 nếu giờ ≤ 12), `đêm` (22h).
+
+Phần còn lại của câu trở thành **tiêu đề**. App hiển thị preview "Sẽ tạo: …" để bạn xác nhận trước khi bấm Enter / nút Thêm. Mặc định lịch tạo ra có loại "Công việc", ưu tiên "Vừa", thời lượng 60 phút — sửa thêm chi tiết bằng cách bấm vào card sau khi tạo.
+
 ---
 
 ## 3. Xem lịch

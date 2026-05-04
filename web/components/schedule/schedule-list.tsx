@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/empty-state";
 import { ScheduleCard } from "./schedule-card";
 import { ScheduleListSkeleton } from "./schedule-card-skeleton";
 import { ScheduleFormDialog } from "./schedule-form-dialog";
+import { QuickAdd } from "./quick-add";
 
 interface Props {
   title: string;
@@ -17,6 +18,8 @@ interface Props {
   emptyTitle?: string;
   emptyDescription?: string;
   showAdd?: boolean;
+  /** Show the natural-language quick-add input above the list. */
+  showQuickAdd?: boolean;
 }
 
 export function ScheduleList({
@@ -27,6 +30,7 @@ export function ScheduleList({
   emptyTitle = "Chưa có lịch nào",
   emptyDescription = "Thêm lịch đầu tiên để bắt đầu quản lý thời gian.",
   showAdd = true,
+  showQuickAdd = false,
 }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Schedule | null>(null);
@@ -57,6 +61,8 @@ export function ScheduleList({
           </Button>
         )}
       </div>
+
+      {showQuickAdd && <QuickAdd />}
 
       {loading ? (
         <ScheduleListSkeleton count={4} />
