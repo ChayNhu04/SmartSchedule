@@ -7,8 +7,8 @@
  *   - overdue  : pending AND start_time < now
  *   - upcoming : pending AND start_time >= now
  *
- * Mobile only has 2 list tabs (Hôm nay, Sắp tới); the overdue bucket falls
- * back to the Today tab — the user is informed via a follow-up Alert.
+ * Mobile has 2 list tabs (Hôm nay, Sắp tới) plus an overdue stack screen at
+ * `/overdue`. Overdue navigates to that screen.
  */
 export type ScheduleBucket = "overdue" | "today" | "upcoming";
 
@@ -16,12 +16,12 @@ export interface BucketInfo {
   key: ScheduleBucket;
   /** Vietnamese label for the bucket. */
   label: string;
-  /** Mobile tab path (mobile has no overdue tab). */
-  tabPath: "/(tabs)" | "/(tabs)/upcoming";
+  /** Path to navigate to after creating a schedule in this bucket. */
+  tabPath: "/(tabs)" | "/(tabs)/upcoming" | "/overdue";
 }
 
 const BUCKET_INFO: Record<ScheduleBucket, BucketInfo> = {
-  overdue: { key: "overdue", label: "Quá hạn", tabPath: "/(tabs)" },
+  overdue: { key: "overdue", label: "Quá hạn", tabPath: "/overdue" },
   today: { key: "today", label: "Hôm nay", tabPath: "/(tabs)" },
   upcoming: { key: "upcoming", label: "Sắp tới", tabPath: "/(tabs)/upcoming" },
 };

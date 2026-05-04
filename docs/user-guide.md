@@ -148,12 +148,12 @@ Trang `/settings` — cần kiểm tra UI hiện tại có những gì.
 | Xem chi tiết / Sửa / Xoá lịch | ✓ | ✓ (icon trên card) | ✓ (màn hình `/schedule/:id`) |
 | Đánh dấu hoàn thành | ✓ | ✓ | ✓ |
 | Hôm nay / Sắp tới | ✓ | ✓ | ✓ |
-| Quá hạn | ✓ | ✓ | ✗ |
+| Quá hạn | ✓ | ✓ | ✓ (banner ở Hôm nay + screen `/overdue`) |
 | Calendar view | ✓ | ✓ | ✗ |
 | Tìm kiếm | ✓ | ✓ | ✓ |
 | Tag | ✓ | ✓ | ✓ |
 | Template | ✓ | ✓ | ✓ |
-| Chia sẻ lịch | ✓ | ✓ (dialog + trang `/shared`) | ✗ |
+| Chia sẻ lịch | ✓ | ✓ (dialog + trang `/shared`) | ✓ (dialog `/schedule/:id/share` + screen `/shared`) |
 | Audit log | ✓ | cần kiểm tra | cần kiểm tra |
 | Push notification (cron + Expo) | ✓ | — | đã có service nhưng **chưa được gọi** (xem [`notifications.md`](./notifications.md)) |
 | Recurrence (lặp daily/weekly/monthly) | có cột DB + DTO, **logic sinh occurrences cần kiểm tra** | tạo được | tạo được |
