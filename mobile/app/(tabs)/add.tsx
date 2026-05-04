@@ -16,10 +16,6 @@ export default function AddScreen() {
     router.replace("/(tabs)");
   };
 
-  const startLabel = startDate
-    ? format(startDate, "EEEE, dd/MM/yyyy HH:mm", { locale: vi })
-    : "Chọn ngày & giờ";
-
   return (
     <Screen title="Thêm lịch" subtitle="Tạo lịch mới cho bạn">
       <ScheduleForm submitLabel="Lưu lịch" onSubmit={handleSubmit} />
