@@ -11,6 +11,8 @@ import { bucketForStartTime, visibleOnPath } from "@/lib/schedule-bucket";
 import type { ScheduleTemplate } from "@smartschedule/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -285,19 +287,17 @@ export default function TemplatesPage() {
           </DialogHeader>
           <div className="space-y-2">
             <Label>Thời gian bắt đầu *</Label>
-            <div className="grid grid-cols-[1fr_120px] gap-2">
-              <Input
-                type="date"
-                aria-label="Ngày bắt đầu"
+            <div className="grid grid-cols-[1fr_140px] gap-2">
+              <DatePicker
+                ariaLabel="Ngày bắt đầu"
                 value={instDate}
-                onChange={(e) => setInstDate(e.target.value)}
+                onChange={setInstDate}
                 required
               />
-              <Input
-                type="time"
-                aria-label="Giờ bắt đầu"
+              <TimePicker
+                ariaLabel="Giờ bắt đầu"
                 value={instTime}
-                onChange={(e) => setInstTime(e.target.value)}
+                onChange={setInstTime}
                 required
               />
             </div>

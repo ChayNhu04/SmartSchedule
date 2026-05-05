@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -108,25 +110,23 @@ function DateTimeField({
   const preview = date && time ? previewDatetimeVi(`${date}T${time}`) : null;
   return (
     <div className="space-y-2">
-      <Label>
+      <Label htmlFor={`${idPrefix}-date`}>
         {label}
         {required ? " *" : ""}
       </Label>
-      <div className="grid grid-cols-[1fr_120px] gap-2">
-        <Input
+      <div className="grid grid-cols-[1fr_140px] gap-2">
+        <DatePicker
           id={`${idPrefix}-date`}
-          type="date"
-          aria-label={`${label} – ngày`}
+          ariaLabel={`${label} – ngày`}
           value={date}
-          onChange={(e) => onDateChange(e.target.value)}
+          onChange={onDateChange}
           required={required}
         />
-        <Input
+        <TimePicker
           id={`${idPrefix}-time`}
-          type="time"
-          aria-label={`${label} – giờ`}
+          ariaLabel={`${label} – giờ`}
           value={time}
-          onChange={(e) => onTimeChange(e.target.value)}
+          onChange={onTimeChange}
           required={required}
         />
       </div>
