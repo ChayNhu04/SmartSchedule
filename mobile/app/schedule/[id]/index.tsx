@@ -27,11 +27,30 @@ export default function ScheduleDetailScreen() {
     enabled: !!id,
   });
 
+  const undoMut = useMutation({
+    mutationFn: () => api.post("/schedules/undo"),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["schedules"] });
+      qc.invalidateQueries({ queryKey: ["schedules", id] });
+      Alert.alert("Đã hoàn tác");
+    },
+    onError: (err) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      Alert.alert(
+        "Không thể hoàn tác",
+        e.response?.data?.message ?? e.message ?? "Quá thời gian (10 phút).",
+      );
+    },
+  });
+
   const completeMut = useMutation({
     mutationFn: () => api.post(`/schedules/${id}/complete`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["schedules"] });
-      Alert.alert("Đã đánh dấu hoàn thành");
+      Alert.alert("Đã đánh dấu hoàn thành", undefined, [
+        { text: "Hoàn tác", onPress: () => undoMut.mutate() },
+        { text: "OK", style: "cancel" },
+      ]);
     },
     onError: (err) => {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
@@ -43,7 +62,26 @@ export default function ScheduleDetailScreen() {
     mutationFn: () => api.delete(`/schedules/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["schedules"] });
-      router.back();
+      Alert.alert("Đã xoá", undefined, [
+        {
+          text: "Hoàn tác",
+          onPress: async () => {
+            try {
+              await api.post("/schedules/undo");
+              qc.invalidateQueries({ queryKey: ["schedules"] });
+              Alert.alert("Đã hoàn tác");
+            } catch (e) {
+              const err = e as { response?: { data?: { message?: string } } };
+              Alert.alert(
+                "Không thể hoàn tác",
+                err.response?.data?.message ?? "Quá thời gian (10 phút).",
+              );
+              router.back();
+            }
+          },
+        },
+        { text: "OK", style: "cancel", onPress: () => router.back() },
+      ]);
     },
     onError: (err) => {
       const e = err as { response?: { data?: { message?: string } }; message?: string };

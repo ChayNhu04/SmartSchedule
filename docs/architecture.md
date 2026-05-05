@@ -213,6 +213,9 @@ Push thực tế đi qua Expo Push Service (`expo-server-sdk`). Chi tiết + cá
 | `/api/schedules/stats` | GET | ✓ | Số liệu (count, completion rate, byPriority, byType) |
 | `/api/schedules/:id` | GET / PATCH / DELETE | ✓ | CRUD chi tiết |
 | `/api/schedules/:id/complete` | POST | ✓ | Đánh dấu hoàn thành |
+| `/api/schedules/undo/peek` | GET | ✓ | Xem thao tác có thể hoàn tác (10 phút) |
+| `/api/schedules/undo` | POST | ✓ | Hoàn tác xoá / hoàn-thành gần nhất |
+| `/api/schedules/export.ics` | GET | ✓ | Xuất iCalendar |
 | `/api/tags` | GET / POST | ✓ | List, tạo tag |
 | `/api/tags/:name` | DELETE | ✓ | Xoá tag |
 | `/api/schedules/:id/tags` | POST | ✓ | Gán tag vào lịch |

@@ -1,16 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SchedulesService } from '../../backend/src/schedules/schedules.service';
 import { Schedule, ScheduleStatus } from '../../backend/src/schedules/entities/schedule.entity';
 import { AuditService } from '../../backend/src/audit/audit.service';
+import { UndoStore } from '../../backend/src/schedules/undo.store';
 import { CreateScheduleDto, UpdateScheduleDto } from '../../backend/src/schedules/dto/schedule.dto';
 
 describe('SchedulesService', () => {
   let service: SchedulesService;
   let repo: Repository<Schedule>;
   let auditService: AuditService;
+  let undoStore: UndoStore;
 
   const userId = '123e4567-e89b-12d3-a456-426614174000';
 
@@ -57,6 +59,7 @@ describe('SchedulesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SchedulesService,
+        UndoStore,
         {
           provide: getRepositoryToken(Schedule),
           useValue: mockRepository,
@@ -71,8 +74,10 @@ describe('SchedulesService', () => {
     service = module.get<SchedulesService>(SchedulesService);
     repo = module.get<Repository<Schedule>>(getRepositoryToken(Schedule));
     auditService = module.get<AuditService>(AuditService);
+    undoStore = module.get<UndoStore>(UndoStore);
 
     jest.clearAllMocks();
+    undoStore.reset();
   });
 
   it('should be defined', () => {
@@ -403,6 +408,127 @@ describe('SchedulesService', () => {
       mockRepository.findOne.mockResolvedValue(null);
 
       await expect(service.remove(userId, 999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('undo', () => {
+    /**
+     * Trả Schedule fresh mỗi test, tránh share reference với các describe khác
+     * (vì describe('update') mutate `mockSchedule` qua Object.assign).
+     */
+    const freshSchedule = (override: Partial<Schedule> = {}): Schedule => ({
+      ...mockSchedule,
+      title: 'Undo Schedule',
+      ...override,
+    });
+
+    it('peekUndo returns null when no entries', () => {
+      expect(service.peekUndo(userId)).toBeNull();
+    });
+
+    it('after delete, peekUndo returns the entry', async () => {
+      const s = freshSchedule();
+      mockRepository.findOne.mockResolvedValue(s);
+      mockRepository.remove.mockResolvedValue(s);
+
+      await service.remove(userId, 1);
+
+      const peek = service.peekUndo(userId);
+      expect(peek).not.toBeNull();
+      expect(peek!.action).toBe('delete');
+      expect(peek!.title).toBe('Undo Schedule');
+      expect(peek!.expiresAt).toBeGreaterThan(Date.now());
+    });
+
+    it('after complete, peekUndo returns the entry', async () => {
+      const s = freshSchedule();
+      mockRepository.findOne.mockResolvedValue(s);
+      mockRepository.save.mockResolvedValue({
+        ...s,
+        status: 'completed' as ScheduleStatus,
+      });
+
+      await service.complete(userId, 1);
+
+      const peek = service.peekUndo(userId);
+      expect(peek).not.toBeNull();
+      expect(peek!.action).toBe('complete');
+    });
+
+    it('undoLast after delete re-creates the schedule', async () => {
+      const s = freshSchedule();
+      mockRepository.findOne.mockResolvedValue(s);
+      mockRepository.remove.mockResolvedValue(s);
+      await service.remove(userId, 1);
+
+      const restored = { ...s, id: 42 };
+      mockRepository.create.mockReturnValue(restored);
+      mockRepository.save.mockResolvedValue(restored);
+
+      const result = await service.undoLast(userId);
+
+      expect(result.action).toBe('delete');
+      expect(result.schedule.title).toBe('Undo Schedule');
+      expect(mockAuditService.log).toHaveBeenCalledWith(42, userId, 'restore');
+      expect(service.peekUndo(userId)).toBeNull();
+    });
+
+    it('undoLast after complete reverts status', async () => {
+      const s = freshSchedule();
+      mockRepository.findOne.mockResolvedValueOnce(s);
+      mockRepository.save.mockResolvedValueOnce({
+        ...s,
+        status: 'completed' as ScheduleStatus,
+        acknowledged_at: new Date(),
+      });
+
+      await service.complete(userId, 1);
+
+      const completedRow = {
+        ...s,
+        status: 'completed' as ScheduleStatus,
+        acknowledged_at: new Date(),
+      };
+      mockRepository.findOne.mockResolvedValueOnce(completedRow);
+      mockRepository.save.mockResolvedValueOnce({
+        ...completedRow,
+        status: 'pending' as ScheduleStatus,
+        acknowledged_at: null,
+      });
+
+      const result = await service.undoLast(userId);
+
+      expect(result.action).toBe('complete');
+      expect(result.schedule.status).toBe('pending');
+      expect(result.schedule.acknowledged_at).toBeNull();
+      expect(mockAuditService.log).toHaveBeenCalledWith(1, userId, 'restore');
+    });
+
+    it('undoLast throws BadRequestException when stack empty', async () => {
+      await expect(service.undoLast(userId)).rejects.toThrow(BadRequestException);
+    });
+
+    it('undoLast pops only the most recent entry', async () => {
+      const first = freshSchedule({ title: 'First' });
+      mockRepository.findOne.mockResolvedValue(first);
+      mockRepository.remove.mockResolvedValue(first);
+      await service.remove(userId, 1);
+
+      const second = freshSchedule({ id: 2, title: 'Second' });
+      mockRepository.findOne.mockResolvedValue(second);
+      mockRepository.remove.mockResolvedValue(second);
+      await service.remove(userId, 2);
+
+      const restored2 = { ...second, id: 99 };
+      mockRepository.create.mockReturnValue(restored2);
+      mockRepository.save.mockResolvedValue(restored2);
+
+      const r = await service.undoLast(userId);
+      expect(r.schedule.title).toBe('Second');
+
+      const peek = service.peekUndo(userId);
+      expect(peek).not.toBeNull();
+      expect(peek!.title).toBe('First');
     });
   });
 });

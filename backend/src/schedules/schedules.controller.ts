@@ -77,6 +77,18 @@ export class SchedulesController {
     return buildIcs(items);
   }
 
+  @Get('undo/peek')
+  @ApiOperation({ summary: 'Xem thao tác có thể hoàn tác (xoá / hoàn thành) trong 10 phút.' })
+  peekUndo(@CurrentUser() u: { id: string }) {
+    return { entry: this.service.peekUndo(u.id) };
+  }
+
+  @Post('undo')
+  @ApiOperation({ summary: 'Hoàn tác thao tác xoá / hoàn thành gần nhất (10 phút).' })
+  undoLast(@CurrentUser() u: { id: string }) {
+    return this.service.undoLast(u.id);
+  }
+
   @Get(':id')
   findOne(@CurrentUser() u: { id: string }, @Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(u.id, id);
