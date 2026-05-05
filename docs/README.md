@@ -6,10 +6,10 @@ Thư mục này chứa các tài liệu chi tiết cho dự án. Phần tổng q
 
 | File | Đối tượng | Nội dung tóm tắt |
 |---|---|---|
-| [`user-guide.md`](./user-guide.md) | Người dùng cuối | Hướng dẫn dùng app: đăng ký, đăng nhập, thêm/xem/tìm lịch, tag, template, chia sẻ, cài đặt. Có ghi rõ tính năng nào đã có trên web/mobile, tính năng nào chưa. |
-| [`developer-setup.md`](./developer-setup.md) | Dev mới vào dự án | Cài đặt local: pnpm, env, Postgres (Docker hoặc Neon), chạy backend / web / mobile, lệnh test, smoke test. |
-| [`architecture.md`](./architecture.md) | Dev | Sơ đồ kiến trúc 4 package (`backend` / `web` / `mobile` / `shared`), data flow, auth flow (JWT), schedule + reminder flow. |
-| [`notifications.md`](./notifications.md) | Dev | Push notification: Expo token, backend lưu, cron 1 phút quét `remind_at`, cách test, lỗi thường gặp. **Đặc biệt: ghi rõ phần nào đã wire xong và phần nào còn thiếu.** |
+| [`user-guide.md`](./user-guide.md) | Người dùng cuối | Hướng dẫn dùng app: đăng ký, đăng nhập, thêm/xem/tìm lịch (gồm "Thêm nhanh" tiếng Việt), hoàn tác xoá/hoàn-thành, tag, mẫu lịch, chia sẻ, cài đặt, thống kê + xuất `.ics`. Bảng đối chiếu Web vs Mobile cuối tài liệu. |
+| [`developer-setup.md`](./developer-setup.md) | Dev mới vào dự án | Cài đặt local: pnpm, env, Postgres (Docker hoặc Neon), chạy backend / web / mobile, lệnh test, health check, smoke test. |
+| [`architecture.md`](./architecture.md) | Dev | Sơ đồ kiến trúc 4 package (`backend` / `web` / `mobile` / `shared`), data flow, auth flow (JWT), schedule + reminder flow (work-hours shift), undo flow, REST API table đầy đủ. |
+| [`notifications.md`](./notifications.md) | Dev | Push notification end-to-end: Expo token, backend lưu, cron 1 phút quét `remind_at`, work-hours shift, settings toggle `notify_via_push`, cách test, lỗi thường gặp. |
 | [`troubleshooting.md`](./troubleshooting.md) | Dev khi gặp lỗi | Lỗi hay gặp: API URL mobile, CORS browser, DB SSL/connect, JWT mismatch, Expo notification, deploy env vars. |
 | [`deployment-railway.md`](./deployment-railway.md) | Dev / DevOps | Runbook deploy backend Railway + Neon Postgres. |
 
@@ -27,4 +27,4 @@ Thư mục này chứa các tài liệu chi tiết cho dự án. Phần tổng q
 - Thay đổi flow đăng nhập / push → `architecture.md` + `notifications.md`.
 - Đổi nhà cung cấp deploy → `deployment-railway.md` (hoặc tạo file mới `deployment-<provider>.md`).
 
-> Doc cấp cao về business + design ở [`../DESIGN.md`](../DESIGN.md) (~1500 dòng). Không trùng nội dung với các file trong thư mục này.
+> Doc cấp cao về business + design ở [`../DESIGN.md`](../DESIGN.md) (~1500 dòng). Không trùng nội dung với các file trong thư mục này. Roadmap v0.2/v0.3 (đã hoàn thành / còn lại) ở [`../PROJECT.md` §10](../PROJECT.md).

@@ -4,10 +4,10 @@
 
 | Service     | Stack                                                                | Deploy             |
 |-------------|----------------------------------------------------------------------|--------------------|
-| **backend** | NestJS · TypeORM · PostgreSQL · JWT · Expo Push                      | Render / Fly / VPS |
-| **web**     | Next.js 15 · Tailwind · shadcn/ui · TanStack Query · FullCalendar    | Vercel             |
-| **mobile**  | React Native (Expo) · Expo Router · Zustand · TanStack Query         | Expo Go / EAS Build|
-| **shared**  | TypeScript types & API contracts dùng chung cho cả 3 client          | (workspace)        |
+| **backend** | NestJS 10 · TypeORM · PostgreSQL · JWT · Expo Push · @nestjs/schedule | Railway / Render / Fly / VPS |
+| **web**     | Next.js 15 · Tailwind · shadcn/ui · TanStack Query · FullCalendar · Sonner toast | Vercel             |
+| **mobile**  | React Native (Expo SDK 54+) · Expo Router · Zustand · TanStack Query · expo-notifications | Expo Go / EAS Build|
+| **shared**  | TypeScript types & API contracts dùng chung cho cả 3 client + parser ngôn ngữ tự nhiên (`parse-vi`) | (workspace)        |
 
 > Tài liệu kiến trúc đầy đủ: [`PROJECT.md`](./PROJECT.md)
 
@@ -86,7 +86,7 @@ pnpm test:cov        # test với coverage report
 
 ## Testing
 
-Dự án có **82 test cases** (45 unit tests + 37 E2E tests) cho backend.
+Dự án có **>200 test cases** cho backend (Jest unit + e2e). Cập nhật chính xác sau mỗi PR — chạy `pnpm --filter smartschedule-backend test` để biết số hiện tại.
 
 ### Chạy tests nhanh (Unit tests - không cần database)
 
@@ -126,28 +126,37 @@ cd test
 - **[test/HUONG-DAN.md](./test/HUONG-DAN.md)** - Hướng dẫn chi tiết (Tiếng Việt)
 - **[test/TEST-SUMMARY.md](./test/TEST-SUMMARY.md)** - Test coverage summary
 
-### Test Coverage
+### Module test coverage
 
-| Module | Unit Tests | E2E Tests | Total |
-|--------|-----------|-----------|-------|
-| Auth | 12 | 12 | 24 |
-| Schedules | 20 | 25 | 45 |
-| Reminders | 13 | 0 | 13 |
-| **TOTAL** | **45** | **37** | **82** |
+Mỗi module backend có spec riêng dưới `test/backend/` và `backend/src/**/*.spec.ts`. Các module có coverage lớn:
+
+| Module | File chính |
+|---|---|
+| Auth (register/login/JWT) | `test/backend/auth.service.spec.ts`, `auth.e2e.spec.ts` |
+| Schedules (CRUD + today/upcoming/overdue/search/stats/undo) | `test/backend/schedules.service.spec.ts`, `schedules.e2e.spec.ts` |
+| Reminders (cron + work-hours shift) | `test/backend/reminders.service.spec.ts`, `backend/src/reminders/work-hours.spec.ts` |
+| Tags / Templates / Shares / Audit | `test/backend/{tags,templates,shares,audit}.service.spec.ts` |
+| Undo store (TTL + LIFO) | `backend/src/schedules/undo.store.spec.ts` |
+| ICS export (RFC 5545) | `backend/src/schedules/ics.spec.ts` |
+| NLP parser tiếng Việt | `shared/src/parse-vi.spec.ts` |
 
 ---
 
 ## Tính năng (tóm tắt)
 
 - 🔐 Đăng ký / đăng nhập (JWT) — chung cho web + mobile
-- 📅 CRUD lịch (task / meeting / event / reminder)
+- 📅 CRUD lịch (task / meeting / event / reminder) + đánh dấu hoàn thành
 - 🟢🟡🔴 Mức ưu tiên + 🔁 lịch lặp (daily/weekly/monthly + interval + until)
-- 🏷️ Tag · 📋 Template · 👥 Chia sẻ (view-only)
-- 🔔 Reminder cron mỗi phút + push notification (mobile)
-- 📅 Calendar view (web — FullCalendar)
-- 🔍 Tìm kiếm + 📊 Thống kê
-- 📜 Audit log
-- ⚙️ Cài đặt (timezone, working hours, default remind)
+- 🏷️ Tag (web + mobile) · 📋 Mẫu lịch (web + mobile, có 4 preset gợi ý) · 👥 Chia sẻ view-only (web + mobile)
+- ⌨️ **Thêm nhanh** — gõ `mai 9h họp scrum` để tạo lịch tự nhiên (web + mobile)
+- ⏪ **Hoàn tác 10 phút** sau xoá / hoàn thành (web toast + mobile alert)
+- 🔔 Reminder cron mỗi phút + push notification — đã wire xong end-to-end. Có **work-hours shift**: reminder ngoài khung giờ làm việc dồn về đầu khung kế tiếp.
+- 📅 Calendar view (web — FullCalendar tiếng Việt)
+- 🔍 Tìm kiếm + 📊 **Thống kê** (web + mobile, biểu đồ pure CSS/RN, range 7/30/365 ngày)
+- 📤 **Xuất iCalendar** (`.ics` — RFC 5545) qua `GET /api/schedules/export.ics`. Mobile share sheet, web tải trực tiếp.
+- 📜 Audit log (`/api/audit`) — ghi mọi mutation
+- ⚙️ Cài đặt user (timezone, work hours, default remind, push toggle, theme sáng/tối)
+- ❤️ Health check `/api/health` (no auth) cho uptime monitor
 
 Chi tiết, API spec, deploy guide xem [`PROJECT.md`](./PROJECT.md).
 
@@ -175,6 +184,7 @@ Chi tiết, API spec, deploy guide xem [`PROJECT.md`](./PROJECT.md).
 Runbook chi tiết:
 - Backend trên **Railway + Neon**: [`docs/deployment-railway.md`](./docs/deployment-railway.md).
 - Tổng quan + web/mobile/CI: [`PROJECT.md` §8](./PROJECT.md#8-deploy).
+- Tổng hợp tài liệu (`docs/`): [`docs/README.md`](./docs/README.md).
 
 ## License
 

@@ -123,12 +123,16 @@ Phải trả `201` với `{ access_token, user }`.
 ## 6. Web
 
 ```bash
-pnpm dev:web
-# == pnpm --filter smartschedule-web dev
+# Backend chiếm 3000 — chạy web trên 3001:
+PORT=3001 pnpm dev:web
+# == PORT=3001 pnpm --filter smartschedule-web dev
 ```
 
-- Mở http://localhost:3001 (Next.js mặc định lấy 3001 vì backend đã chiếm 3000; cần kiểm tra `web/package.json` script `dev` xem có `--port 3001` không, nếu không Next.js sẽ tự đề xuất port khác).
+Nếu không đặt `PORT`, Next.js sẽ tự detect 3000 bị chiếm và fallback 3001 (in `⚠ Port 3000 is in use, trying 3001`).
+
+- Mở http://localhost:3001
 - Đăng nhập bằng tài khoản vừa tạo ở §5.
+- Nếu gọi backend trên port khác, nhớ cập nhật `web/.env.local` rồi restart dev server.
 
 ## 7. Mobile (Expo)
 
@@ -170,15 +174,17 @@ Một số API native KHÔNG chạy trên web (vd `Alert.alert` no-op, `expo-not
 | `pnpm typecheck` | Typecheck song song |
 | `pnpm build` | Build tất cả package |
 | `pnpm test` | Chạy test (chủ yếu là backend Jest) |
-| `pnpm test:e2e` | Backend e2e test |
+| `pnpm test:e2e` | Backend e2e test (cần PostgreSQL) |
+| `pnpm test:unit` | Backend unit tests (không cần DB) |
+| `pnpm test:cov` | Backend test + coverage report |
 | `pnpm dev:backend` / `dev:web` / `dev:mobile` | Chạy từng client ở dev mode |
 
 ## 9. Workflow Git
 
 - Branch convention: `devin/<unix-ts>-<topic>` (do session Devin tạo) hoặc `feat/<topic>`, `fix/<topic>`.
-- PR vào `main`. CI 4 job sẽ chạy: shared / backend / web / mobile (xem `.github/workflows/ci.yml`).
+- PR vào `main`. CI sẽ chạy các job: shared typecheck, backend lint+build+test, web typecheck+build, mobile typecheck, Vercel preview (xem `.github/workflows/ci.yml`).
 - PR phải xanh CI trước khi merge.
-- Nếu repo có pre-commit hooks (`.pre-commit-config.yaml`), chạy `pre-commit install` 1 lần (hiện tại **chưa có** — cần kiểm tra trước khi yêu cầu).
+- Repo hiện **không** có `.pre-commit-config.yaml` — không cần `pre-commit install`.
 
 ## 10. Troubleshooting setup
 
@@ -188,3 +194,20 @@ Nếu vướng → xem [`troubleshooting.md`](./troubleshooting.md). Vài lỗi 
 - **Backend khởi động báo `ECONNREFUSED 127.0.0.1:5432`** → Postgres chưa chạy. `docker compose up -d db`.
 - **Mobile báo "Network Error" lúc đăng nhập trên thiết bị thật** → `EXPO_PUBLIC_API_URL` đang trỏ `localhost`. Đổi sang IP LAN.
 - **Web báo CORS** → `CORS_ORIGIN` ở backend không khớp. Set thành `*` (chỉ dev) hoặc URL chính xác (vd `http://localhost:3001`).
+
+## 11. Smoke test sau setup
+
+Sau khi 3 client chạy được, kiểm tra nhanh:
+
+```bash
+# Backend health (không cần auth)
+curl http://localhost:3000/api/health
+# Kỳ vọng: {"status":"ok","db":"up","uptime_seconds":...,"timestamp":"..."}
+
+# Backend Swagger
+open http://localhost:3000/api/docs   # hoặc mở trong browser
+```
+
+Trên web (`http://localhost:3001`): đăng ký → tạo lịch → xoá → bấm "Hoàn tác" trên toast trong vòng 10 phút → lịch quay về.
+
+Trên mobile: đăng nhập → gõ "mai 9h họp scrum" vào ô "Thêm nhanh" → lich được tạo ở tab Sắp tới.

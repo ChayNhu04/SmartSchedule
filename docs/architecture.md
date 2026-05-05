@@ -26,9 +26,9 @@ Tài liệu giải thích cách 4 package tương tác với nhau. Đọc kèm c
 ```
 
 ### `shared/` — `@smartschedule/shared`
-- File duy nhất: [`shared/src/index.ts`](../shared/src/index.ts).
+- 2 file chính: [`shared/src/index.ts`](../shared/src/index.ts) (types) và [`shared/src/parse-vi.ts`](../shared/src/parse-vi.ts) (NLP parser).
 - Export: enum (`SchedulePriority`, `ScheduleStatus`, `ScheduleItemType`, `RecurrenceType`), labels tiếng Việt, interface (`Schedule`, `Tag`, `AuthUser`, `UserSettings`, `ScheduleTemplate`, …) và contract API (`LoginRequest`, `CreateScheduleRequest`, …).
-- KHÔNG có runtime code → import từ Node (Nest), Next.js (web), React Native (Expo) đều OK.
+- `parse-vi.ts` là pure TS (no runtime deps) parse câu tiếng Việt → `{ title, start_time }`. Dùng bởi web + mobile cho tính năng "Thêm nhanh". 26 unit tests.
 - Khi đổi schema DB / DTO ở backend, **phải đồng bộ** type ở đây để 2 client compile.
 
 ### `backend/` — NestJS REST API
@@ -37,13 +37,14 @@ Module map (xem `backend/src/app.module.ts`):
 | Module | Path prefix | Trách nhiệm |
 |---|---|---|
 | `AuthModule` | `/auth/*` | Register, login, `me`. Phát JWT. |
-| `UsersModule` | `/users/*` | Get/update settings, update push token. |
-| `SchedulesModule` | `/schedules/*` | CRUD lịch + filter (today / upcoming / overdue / search) + stats. |
+| `UsersModule` | `/users/*` | Get/update settings, update push token, lookup theo email. |
+| `SchedulesModule` | `/schedules/*` | CRUD lịch + filter (today / upcoming / overdue / search) + stats + **undo (10 phút, in-memory)** + **export `.ics`**. |
 | `TagsModule` | `/tags/*`, `/schedules/:id/tags`, `/schedules-by-tag/:name` | CRUD tag, gán/gỡ tag. |
 | `TemplatesModule` | `/templates/*` | CRUD template, instantiate thành schedule. |
 | `SharesModule` | `/schedules/:id/shares`, `/shared-with-me` | Chia sẻ lịch giữa user. |
-| `RemindersModule` | (cron, không expose REST) | Cron mỗi phút quét `remind_at`, đẩy push qua Expo. |
-| `AuditModule` | `/audit` | Log mọi thay đổi schedule (create/update/complete/cancel/share-add/...). |
+| `RemindersModule` | (cron, không expose REST) | Cron mỗi phút quét `remind_at`, đẩy push qua Expo. Có **work-hours shift** — reminder ngoài khung giờ làm việc dồn về đầu khung kế tiếp. |
+| `AuditModule` | `/audit` | Log mọi thay đổi schedule (create/update/complete/cancel/restore/share-add/…). |
+| `HealthModule` | `/health` | No-auth ping, kiểm DB connection — dùng cho uptime monitor. |
 
 Global prefix: `app.setGlobalPrefix('api')` ở `backend/src/main.ts`. Tất cả URL có dạng `/api/<module>/...`.
 
@@ -56,19 +57,24 @@ Các kỹ thuật:
 
 ### `web/` — Next.js 15 (App Router)
 - Route public: `/login`, `/register` (xem `web/app/login`, `web/app/register`).
-- Route protected (group `(app)/`): `today`, `upcoming`, `overdue`, `calendar`, `search`, `tags`, `templates`, `settings`.
+- Route protected (group `(app)/`): `today`, `upcoming`, `overdue`, `calendar`, `search`, `tags`, `templates`, `shared`, `stats`, `settings`.
 - `web/lib/api.ts`: axios client, interceptor tự gắn `Bearer <token>`, redirect `/login` khi 401.
 - TanStack Query (xem `web/app/providers.tsx`) cache server state.
 - Tailwind + shadcn/ui (`web/components/ui`), schedule UI ở `web/components/schedule/`.
+- Sonner toast cho mọi feedback (success/error). Toast của delete/complete có action button "Hoàn tác" 8s gọi `POST /schedules/undo`.
+- ConfirmDialog (shadcn AlertDialog) cho mọi action destructive (xoá) — thay `window.confirm`.
 
 ### `mobile/` — Expo / React Native (SDK 54+)
 - Routing: Expo Router file-based.
   - `(auth)/login`, `(auth)/register` — màn hình public.
   - `(tabs)/index` (Hôm nay), `(tabs)/upcoming`, `(tabs)/add`, `(tabs)/search`, `(tabs)/settings`.
+  - Stack screens gốc: `/schedule/:id` (chi tiết), `/schedule/:id/edit`, `/schedule/:id/share`, `/overdue`, `/shared`, `/tags`, `/templates`, `/stats`.
 - `mobile/services/api.ts`: axios client, đọc token từ `AsyncStorage` (`auth_token`), gắn `Authorization` header.
+- `mobile/services/notifications.ts`: `registerForPushNotificationsAsync()` xin permission, lấy Expo Push Token, PATCH `/users/me/push-token`. Được gọi từ `(tabs)/_layout.tsx` sau khi `useAuthStore.token` truthy. Xem [`notifications.md`](./notifications.md).
 - `mobile/hooks/useAuthStore.ts`: Zustand store giữ `user` + lifecycle login/logout.
 - TanStack Query cho data fetching.
 - Theme custom (sáng/tối) qua `mobile/theme/ThemeContext.tsx`.
+- Form lịch dùng chung component `mobile/components/ScheduleForm.tsx` cho cả tạo + sửa.
 
 ---
 
@@ -161,13 +167,15 @@ Client lưu token:
 Audit log ghi từng transition vào bảng schedule_audit_logs.
 ```
 
+**Undo (10 phút)**: cả `complete()` và `remove()` push 1 snapshot vào `UndoStore` (in-memory, per-user, max 20 entry, TTL 10 phút) trước khi mutate. `POST /schedules/undo` pop entry gần nhất → re-create cho `delete` hoặc revert `status`/`acknowledged_at` cho `complete`. Cả hai chiều log audit action `restore`. `UndoCleanupService` chạy `@Cron(EVERY_MINUTE)` sweep entry hết hạn. Restart backend → mất state undo (MVP trade-off, không persist).
+
 Cột chính trong bảng `schedules` (xem `backend/migrations/001-init.sql:26-46`):
 - `status` ∈ {pending, completed, cancelled}
 - `priority` ∈ {low, normal, high}
 - `item_type` ∈ {task, meeting, event, reminder}
 - `start_time`, `end_time`, `remind_at` — TIMESTAMPTZ.
 - `recurrence_type` ∈ {none, daily, weekly, monthly}, `recurrence_interval`, `recurrence_until`, `recurrence_parent_id`.
-  - **Cần kiểm tra**: code hiện sinh recurring schedule ra nhiều row hay chỉ render mềm trên client? Đọc `backend/src/schedules/schedules.service.ts` để xác nhận.
+  - Lưu ý: hiện tại lich lặp chỉ lưu **1 row gốc** (không sinh occurrences sang nhiều row). Logic render occurrences ở client (calendar view). Nếu cần materialize → bổ sung sau.
 
 ## 5. Reminder flow (cron)
 
@@ -178,9 +186,13 @@ Mỗi phút (CronExpression.EVERY_MINUTE):
     │     SELECT schedules WHERE remind_at <= NOW()
     │       AND acknowledged_at IS NULL
     │       AND status = 'pending'
+    │       AND user.notify_via_push = true       ← respect settings toggle
     │     ORDER BY remind_at ASC LIMIT 100
     │
     │     for each due schedule:
+    │       if outside user.work_hours:           ← work-hours shift
+    │         remind_at = nextWorkHourStart(user.timezone)
+    │         continue
     │       if user.expo_push_token tồn tại:
     │         PushService.send([{ to: token, title, body, data }])
     │       UPDATE schedules SET
@@ -197,6 +209,7 @@ Push thực tế đi qua Expo Push Service (`expo-server-sdk`). Chi tiết + cá
 
 | Endpoint | Method | Auth | Mô tả |
 |---|---|:---:|---|
+| `/api/health` | GET | — | Health check (DB ping, uptime, timestamp) — cho uptime monitor |
 | `/api/auth/register` | POST | — | Tạo user + trả JWT |
 | `/api/auth/login` | POST | — | Login, trả JWT |
 | `/api/auth/me` | GET | ✓ | Thông tin user hiện tại |
@@ -240,4 +253,7 @@ Các điểm có thể cải thiện (chưa làm, để cân nhắc):
 - **Refresh token**: hiện chỉ có access token 7d, hết hạn user phải login lại. Có thể thêm refresh token + rotation.
 - **Realtime**: chưa có WebSocket / SSE — share lịch hoặc thay đổi không đẩy realtime cho client thứ hai.
 - **Reminder retry / dead-letter**: cron chỉ best-effort, không retry khi Expo trả lỗi (xem `backend/src/reminders/push.service.ts`).
+- **Undo persistence**: hiện in-memory — backend restart mất state. Có thể chuyển sang Redis hoặc bảng `schedule_undo_entries` với TTL job.
+- **Recurrence materialization**: hiện lưu 1 row gốc, client tự sinh occurrences — có thể thêm job materialize vào DB để query nhanh hơn.
+- **ICS import** (chiều ngược của `export.ics`): backend đã cài `ical.js` nhưng chưa code endpoint.
 - **Mobile parity**: thêm UI tag / template / share / overdue / calendar (xem [`user-guide.md` §9](./user-guide.md#9-tính-năng-có-sẵn--bảng-đối-chiếu)).

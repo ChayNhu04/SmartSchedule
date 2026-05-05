@@ -25,7 +25,7 @@ Tài liệu cho **người dùng cuối** SmartSchedule. Có 2 client:
 
 ### Đăng xuất
 - **Mobile**: tab **Cài đặt** → **Đăng xuất**.
-- **Web**: menu user góc trên (cần kiểm tra UI hiện tại) — hoặc xoá `auth_token` trong localStorage.
+- **Web**: nút **Đăng xuất** ở cuối sidebar (hoặc xoá `auth_token` trong localStorage).
 
 ---
 
@@ -80,35 +80,40 @@ Phần còn lại của câu trở thành **tiêu đề**. App hiển thị prev
 | Màn hình | Mô tả | Web | Mobile |
 |---|---|---|---|
 | **Hôm nay** | Lịch trong ngày hiện tại | ✓ `/today` | ✓ tab "Hôm nay" |
-| **Sắp tới** | Lịch trong 7 ngày tới (cần kiểm tra range) | ✓ `/upcoming` | ✓ tab "Sắp tới" |
-| **Quá hạn** | Lịch đã qua mà chưa hoàn thành | ✓ `/overdue` | ✗ |
-| **Lịch tháng** (calendar view) | Hiển thị dạng FullCalendar | ✓ `/calendar` | ✗ |
+| **Sắp tới** | Lịch trong 7 ngày tới | ✓ `/upcoming` | ✓ tab "Sắp tới" |
+| **Quá hạn** | Lịch đã qua mà chưa hoàn thành | ✓ `/overdue` | ✓ banner ở "Hôm nay" + screen `/overdue` |
+| **Lịch tháng** (calendar view) | Hiển thị dạng FullCalendar | ✓ `/calendar` | ✗ chưa có |
+| **Thống kê** | Số liệu + biểu đồ + xuất `.ics` | ✓ `/stats` | ✓ Cài đặt → Quản lý → Thống kê |
 
 ### Tương tác trên mỗi lịch
 
 **Web** (trang Hôm nay / Sắp tới / Quá hạn / Calendar):
-- 3 nút icon ở góc phải mỗi card: ✓ **Hoàn thành** (`POST /schedules/:id/complete`), ✏️ **Sửa** (mở dialog), 🗑 **Xoá** (xác nhận rồi `DELETE /schedules/:id`).
+- 3 nút icon ở góc phải mỗi card: ✓ **Hoàn thành** (`POST /schedules/:id/complete`), ✏️ **Sửa** (mở dialog), 🗑 **Xoá** (mở `ConfirmDialog`).
+- Sau khi xoá / hoàn thành, **toast Sonner** có nút **"Hoàn tác"** (8 giây) — bấm để khôi phục (`POST /schedules/undo`). Cửa sổ hoàn tác hiệu lực **10 phút** kể từ thao tác.
 
 **Mobile**:
 - Bấm vào card lịch → mở **màn hình Chi tiết** (`/schedule/:id`):
   - Hiển thị thời gian bắt đầu/kết thúc, nhắc lúc, loại, lặp, mô tả.
   - Nút **Đánh dấu hoàn thành** (chỉ hiện khi status = pending).
-  - Nút **Sửa** → mở màn hình Sửa với form đã điền sẵn.
-  - Nút **Xoá** → bật `Alert` xác nhận, sau đó `DELETE /schedules/:id`.
+  - Nút **Sửa** → mở màn hình Sửa với form đã điền sẵn (component `ScheduleForm` mode `edit`).
+  - Nút **Xoá** → bật `Alert` xác nhận → `DELETE /schedules/:id` → `Alert` thứ hai có nút **"Hoàn tác"** + **"OK"**.
+  - Sau khi đánh dấu hoàn thành, `Alert` cũng có nút **"Hoàn tác"** + **"OK"**.
 
 ---
 
 ## 4. Tìm kiếm
 
-- **Web**: trang `/search` — gõ keyword, kết quả là các lịch khớp tiêu đề/mô tả (cần kiểm tra logic chính xác — server endpoint `GET /schedules/search?q=…`).
+- **Web**: trang `/search` — gõ keyword, kết quả là các lịch khớp tiêu đề **hoặc** mô tả (`ILIKE %keyword%`, max 50 kết quả gần nhất). Endpoint `GET /schedules/search?q=…`.
 - **Mobile**: tab "Tìm" — tương tự.
 
 ---
 
-## 5. Tag (chỉ web)
+## 5. Tag
 
 - **Web**: trang `/tags`. Tạo tag (tên + màu), gán/gỡ tag khỏi lịch, lọc lịch theo tag.
-- **Mobile**: ✗ chưa có UI. Endpoint backend đã có (`GET/POST/DELETE /tags`, `POST /schedules/:id/tags`, `GET /schedules-by-tag/:name`) — **đề xuất bổ sung UI mobile**.
+- **Mobile**: Cài đặt → Quản lý → **Nhãn**. Tạo / xoá tag. Tag hiển thị dạng chip trên schedule card. Trang **Sắp tới** có hàng chip filter theo tag (gọi `/schedules?tag_id=N`).
+
+Backend endpoint: `GET/POST/DELETE /tags`, `POST /schedules/:id/tags`, `GET /schedules-by-tag/:name`.
 
 ---
 
@@ -127,7 +132,9 @@ Use case: ghi nhớ kịch bản hay lặp lại như "Họp scrum 9h sáng 30 p
   - Trên mỗi schedule card: nút icon **Share** → mở dialog tìm user theo email → "Chia sẻ" → người kia thấy lịch ở mục "Chia sẻ với tôi".
   - Sidebar: **Chia sẻ với tôi** (`/shared`) — list lịch người khác chia sẻ cho mình. Read-only (không sửa/xoá), có badge "Từ <tên người chia sẻ>".
   - Dialog có thể gỡ share đã có.
-- **Mobile**: ✗ chưa có UI. Backend endpoint sẵn sàng — **đề xuất bổ sung** mobile share dialog + screen "Chia sẻ với tôi".
+- **Mobile**:
+  - Trên màn Chi tiết lịch: nút **Chia sẻ** → mở `/schedule/:id/share` (tìm theo email + danh sách user đang nhận).
+  - Trang **"Chia sẻ với tôi"** mở từ Cài đặt → Quản lý → "Chia sẻ với tôi" (`/shared`).
 
 Backend endpoint:
 - `POST /schedules/:id/shares` — body `{ target_user_id }`.
@@ -141,19 +148,22 @@ Backend endpoint:
 ## 8. Cài đặt
 
 ### Mobile (tab "Cài đặt")
-Hiện có:
 - Avatar + tên + email user.
-- Toggle giao diện sáng/tối (`ThemeToggle`).
+- Toggle giao diện **sáng / tối**.
+- Toggle **Nhận thông báo đẩy** (cập nhật `notify_via_push`).
+- **Múi giờ** (default `Asia/Ho_Chi_Minh`).
+- **Khung giờ làm việc** — `work_start_hour` / `work_end_hour`. Reminder rơi ngoài khung sẽ được dồn về đầu khung kế tiếp.
+- **Số phút nhắc mặc định** (`default_remind_minutes`).
+- Card "Quản lý" — link sang Nhãn / Mẫu lịch / Chia sẻ với tôi / Quá hạn / Thống kê.
 - Nút **Đăng xuất**.
 
-**Đề xuất bổ sung** (backend đã hỗ trợ qua `GET/PATCH /users/me/settings`):
-- Timezone
-- Số phút nhắc mặc định
-- Bật/tắt nhận push
-- Khung giờ làm việc (work_start_hour, work_end_hour)
-
-### Web
-Trang `/settings` — cần kiểm tra UI hiện tại có những gì.
+### Web (trang `/settings`)
+- Toggle theme sáng / tối (cũng có ở sidebar).
+- Toggle nhận push notification (chú ý: web không nhận push, đây chỉ là master toggle dùng chung cho tất cả device đăng nhập cùng tài khoản).
+- Múi giờ.
+- Khung giờ làm việc + validate `end > start`. Mặc định 8/17.
+- Số phút nhắc mặc định.
+- Tài khoản — đổi tên hiển thị, đăng xuất.
 
 ---
 
@@ -162,19 +172,24 @@ Trang `/settings` — cần kiểm tra UI hiện tại có những gì.
 | Tính năng | Backend | Web | Mobile |
 |---|:---:|:---:|:---:|
 | Đăng ký / đăng nhập | ✓ | ✓ | ✓ |
-| Thêm lịch | ✓ | ✓ | ✓ |
-| Xem chi tiết / Sửa / Xoá lịch | ✓ | ✓ (icon trên card) | ✓ (màn hình `/schedule/:id`) |
+| Thêm lịch (form đầy đủ) | ✓ | ✓ | ✓ |
+| **Thêm nhanh** (NLP tiếng Việt) | ✓ (parser ở `shared`) | ✓ (Hôm nay / Sắp tới) | ✓ (Hôm nay) |
+| Xem chi tiết / Sửa / Xoá lịch | ✓ | ✓ (icon trên card) | ✓ (`/schedule/:id`) |
 | Đánh dấu hoàn thành | ✓ | ✓ | ✓ |
+| **Hoàn tác xoá / hoàn-thành (10 phút)** | ✓ (`POST /schedules/undo`) | ✓ (Sonner toast) | ✓ (Alert) |
 | Hôm nay / Sắp tới | ✓ | ✓ | ✓ |
-| Quá hạn | ✓ | ✓ | ✓ (banner ở Hôm nay + screen `/overdue`) |
-| Calendar view | ✓ | ✓ | ✗ |
-| Tìm kiếm | ✓ | ✓ | ✓ |
-| Tag | ✓ | ✓ | ✓ |
-| Template | ✓ | ✓ | ✓ |
-| Chia sẻ lịch | ✓ | ✓ (dialog + trang `/shared`) | ✓ (dialog `/schedule/:id/share` + screen `/shared`) |
-| Audit log | ✓ | cần kiểm tra | cần kiểm tra |
-| Push notification (cron + Expo) | ✓ | — | đã có service nhưng **chưa được gọi** (xem [`notifications.md`](./notifications.md)) |
-| Recurrence (lặp daily/weekly/monthly) | có cột DB + DTO, **logic sinh occurrences cần kiểm tra** | tạo được | tạo được |
+| Quá hạn | ✓ | ✓ `/overdue` | ✓ (banner ở Hôm nay + screen `/overdue`) |
+| Calendar tháng | ✓ | ✓ FullCalendar tiếng Việt | ✗ chưa có |
+| Tìm kiếm | ✓ | ✓ `/search` | ✓ tab "Tìm" |
+| **Thống kê** + bar chart | ✓ (`/schedules/stats`) | ✓ `/stats` (CSS bar) | ✓ `/stats` (RN View bar) |
+| **Xuất iCalendar `.ics`** | ✓ (`/schedules/export.ics`) | ✓ nút trong `/stats` (download) | ✓ Cài đặt → Quản lý → Thống kê (share sheet) |
+| Tag (CRUD + filter) | ✓ | ✓ `/tags` | ✓ `/tags` + filter chip ở Sắp tới |
+| Mẫu lịch (CRUD + 4 preset) | ✓ | ✓ `/templates` | ✓ `/templates` |
+| Chia sẻ lịch | ✓ | ✓ (dialog + `/shared`) | ✓ (`/schedule/:id/share` + `/shared`) |
+| Audit log | ✓ (`/audit`) | ✗ chưa expose UI | ✗ chưa expose UI |
+| Push notification (cron + Expo) | ✓ (cron + work-hours shift) | — (browser không nhận push) | ✓ wired ở `(tabs)/_layout.tsx` |
+| Recurrence (daily/weekly/monthly + interval + until) | ✓ (cột DB + DTO; logic sinh occurrences chưa code, lịch lặp hiện chỉ lưu 1 row gốc) | ✓ form chọn được | ✓ form chọn được |
+| Health check (`/health`) | ✓ | — | — |
 
 ---
 

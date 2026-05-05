@@ -39,7 +39,12 @@ Tài liệu đầy đủ về push notification trên SmartSchedule. Hệ thốn
         ▼
 [5] Cron mỗi phút: RemindersService.tick()
     - SELECT schedules WHERE remind_at <= NOW() AND status='pending' AND acknowledged_at IS NULL
-    - foreach: PushService.send([{ to: user.expo_push_token, title, body, data }])
+      JOIN users ON users.notify_via_push = true        ← tôn trọng toggle settings
+    - foreach:
+        if outside user.work_hours (theo timezone):    ← work-hours shift
+          remind_at = nextWorkHourStart(); skip push;
+        else:
+          PushService.send([{ to: user.expo_push_token, title, body, data }])
         │
         ▼
 [6] Expo Push Service (https://exp.host) → APNS / FCM → device
@@ -140,7 +145,8 @@ Development log: bật `__DEV__` console sẽ thấy `[push] đã đăng ký tok
 | `Device.isDevice === false` → return null | Đang chạy simulator/web | Test trên thiết bị thật |
 | Token trả về `null` | User từ chối permission | Vào Settings điện thoại bật notification cho Expo Go / app |
 | `Constants.expoConfig.extra.eas.projectId` undefined | Chưa `eas init` | Chạy `eas init` trong `mobile/`, hoặc chấp nhận Expo Go (vẫn lấy được token nhờ `null projectId` fallback) |
-| Backend cron im lặng dù schedule có `remind_at` | `acknowledged_at` đã được set, hoặc `status != 'pending'`, hoặc user `expo_push_token IS NULL` | Check DB: `SELECT id, remind_at, acknowledged_at, status FROM schedules WHERE id=...` |
+| Backend cron im lặng dù schedule có `remind_at` | `acknowledged_at` đã được set, hoặc `status != 'pending'`, hoặc user `expo_push_token IS NULL`, hoặc `users.notify_via_push = false` | Check DB: `SELECT id, remind_at, acknowledged_at, status FROM schedules WHERE id=...` và `SELECT notify_via_push, expo_push_token FROM users WHERE id=...` |
+| Push tới sáng hôm sau dù tạo schedule lúc tối | Reminder rơi ngoài `work_start_hour..work_end_hour` (theo timezone user). Cron dồn về đầu khung làm việc kế tiếp | Tắt work_hours (set 0/0) hoặc đổi khung trong Cài đặt |
 | `Invalid Expo push token` log từ `PushService` | Token client lưu khác format `ExponentPushToken[...]` | Có thể device đang ở mode FCM thuần — đảm bảo dùng `getExpoPushTokenAsync()`, không phải `getDevicePushTokenAsync()` |
 | Push nhận được trên thiết bị nhưng không hiện banner | `setNotificationHandler` trả về `shouldShowBanner: false` | Đã set `true` trong code; kiểm Settings điện thoại có chặn không |
 | Push gửi xong vẫn chưa unmark `is_reminded` | Cron đẩy `remind_at` về tương lai → user sẽ bị nhắc lại sau `default_remind_minutes`. Đây là **feature** không phải bug | Set `acknowledged_at` từ client khi user tap notification để stop loop |

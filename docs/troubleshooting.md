@@ -77,7 +77,7 @@ Mobile (iOS/Android, không phải Expo Web) không bị CORS — đó là cơ c
 - Local: chỉnh `max_connections` trong Postgres config (mặc định 100, thường thừa).
 
 ### Schema cũ sau khi đổi entity TypeORM
-- Repo hiện **không dùng** TypeORM `synchronize: true` (kiểm `database.config.ts` để chắc) — schema chỉ thay đổi qua file SQL trong `backend/migrations/`.
+- Repo có `synchronize: false` ([`backend/src/config/database.config.ts`](../backend/src/config/database.config.ts)) — schema chỉ thay đổi qua file SQL trong `backend/migrations/`.
 - Quy trình: viết file `00N-<name>.sql`, apply thủ công lên DB từng môi trường.
 - **Đề xuất bổ sung**: chuyển sang TypeORM migrations chính thức (`pnpm typeorm migration:generate`) cho versioning rõ hơn — hiện chưa làm.
 
@@ -111,8 +111,9 @@ Mobile (iOS/Android, không phải Expo Web) không bị CORS — đó là cơ c
 | Triệu chứng | Fix |
 |---|---|
 | Token = null | Đang trên simulator/web. Test thiết bị thật. |
-| User không nhận push | `registerForPushNotificationsAsync()` chưa được gọi (xem `notifications.md` §6) |
-| Cron im lặng | Check `remind_at <= now()` và `expo_push_token IS NOT NULL` ở DB |
+| Push không đến dù có schedule due | Check `users.notify_via_push = true` (settings có toggle), và `expo_push_token IS NOT NULL` ở DB |
+| Push bị dời sang giờ khác | Đúng — reminder ngoài `work_start_hour..work_end_hour` (theo timezone user) sẽ bị dồn về đầu khung kế tiếp. Không muốn: tắt work hours (set 0/0) trong settings |
+| Cron im lặng | Check `remind_at <= now()`, `status='pending'`, và backend đang chạy (không bị scale-to-zero ở prod) |
 
 ---
 
@@ -158,7 +159,21 @@ Mobile (iOS/Android, không phải Expo Web) không bị CORS — đó là cơ c
 
 ---
 
-## 8. Khi không biết lỗi từ đâu
+## 8. Health check
+
+Nếu không chắc backend có chạy / DB có kết nối được:
+
+```bash
+curl http://localhost:3000/api/health
+# {"status":"ok","db":"up","uptime_seconds":12.3,"timestamp":"2026-..."}
+```
+
+- `db: "down"` → đi tiếp §3 (DB).
+- HTTP timeout / connection refused → backend không chạy, xem §1 hoặc §7 (deploy).
+
+Production (Railway/Fly): set health check của platform trỏ `/api/health` để tự restart khi unhealthy.
+
+## 9. Khi không biết lỗi từ đâu
 
 Quy trình debug:
 1. **Reproduce nhỏ nhất**: gói lại câu lệnh / action gây lỗi.
