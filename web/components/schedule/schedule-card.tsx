@@ -39,10 +39,22 @@ export function ScheduleCard({ schedule, onEdit, readOnly }: Props) {
   const isOverdue =
     schedule.status === "pending" && isPast(new Date(schedule.start_time));
 
+  const undoMut = useMutation({
+    mutationFn: () => api.post("/schedules/undo"),
+    onSuccess: () => {
+      toast.success("Đã hoàn tác");
+      qc.invalidateQueries({ queryKey: ["schedules"] });
+    },
+    onError: () => toast.error("Không thể hoàn tác (đã quá 10 phút?)"),
+  });
+
   const completeMut = useMutation({
     mutationFn: () => api.post(`/schedules/${schedule.id}/complete`),
     onSuccess: () => {
-      toast.success("Đã đánh dấu hoàn thành");
+      toast.success("Đã đánh dấu hoàn thành", {
+        action: { label: "Hoàn tác", onClick: () => undoMut.mutate() },
+        duration: 8000,
+      });
       qc.invalidateQueries({ queryKey: ["schedules"] });
     },
     onError: () => toast.error("Không thể cập nhật"),
@@ -51,7 +63,10 @@ export function ScheduleCard({ schedule, onEdit, readOnly }: Props) {
   const deleteMut = useMutation({
     mutationFn: () => api.delete(`/schedules/${schedule.id}`),
     onSuccess: () => {
-      toast.success("Đã xoá");
+      toast.success("Đã xoá", {
+        action: { label: "Hoàn tác", onClick: () => undoMut.mutate() },
+        duration: 8000,
+      });
       qc.invalidateQueries({ queryKey: ["schedules"] });
     },
     onError: () => toast.error("Không thể xoá"),

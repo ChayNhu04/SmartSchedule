@@ -1,15 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, ILike, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { Schedule, SchedulePriority } from './entities/schedule.entity';
 import { CreateScheduleDto, QueryScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
 import { AuditService } from '../audit/audit.service';
+import { UndoStore } from './undo.store';
 
 @Injectable()
 export class SchedulesService {
   constructor(
     @InjectRepository(Schedule) private readonly repo: Repository<Schedule>,
     private readonly audit: AuditService,
+    private readonly undoStore: UndoStore,
   ) {}
 
   async create(userId: string, dto: CreateScheduleDto): Promise<Schedule> {
@@ -152,6 +154,10 @@ export class SchedulesService {
 
   async complete(userId: string, id: number): Promise<Schedule> {
     const s = await this.findOne(userId, id);
+    this.undoStore.push(userId, {
+      action: 'complete',
+      snapshot: UndoStore.cloneSchedule(s),
+    });
     s.status = 'completed';
     s.acknowledged_at = new Date();
     const saved = await this.repo.save(s);
@@ -161,9 +167,71 @@ export class SchedulesService {
 
   async remove(userId: string, id: number): Promise<{ ok: true }> {
     const s = await this.findOne(userId, id);
+    this.undoStore.push(userId, {
+      action: 'delete',
+      snapshot: UndoStore.cloneSchedule(s),
+    });
     await this.repo.remove(s);
     await this.audit.log(id, userId, 'delete');
     return { ok: true };
+  }
+
+  /**
+   * Pop entry undo gần nhất và revert.
+   * - delete: re-insert lịch (giữ nguyên id nếu DB cho phép, nếu không thì id mới).
+   * - complete: revert status về snapshot.status + acknowledged_at = null.
+   */
+  async undoLast(userId: string): Promise<{ action: 'delete' | 'complete'; schedule: Schedule }> {
+    const entry = this.undoStore.pop(userId);
+    if (!entry) {
+      throw new BadRequestException('Không có thao tác nào để hoàn tác (giới hạn 10 phút).');
+    }
+    const snap = entry.snapshot;
+    if (entry.action === 'delete') {
+      const restored = this.repo.create({
+        user_id: snap.user_id,
+        item_type: snap.item_type,
+        title: snap.title,
+        description: snap.description,
+        start_time: snap.start_time,
+        end_time: snap.end_time,
+        status: snap.status,
+        priority: snap.priority,
+        remind_at: snap.remind_at,
+        is_reminded: snap.is_reminded,
+        acknowledged_at: snap.acknowledged_at,
+        end_notified_at: snap.end_notified_at,
+        recurrence_type: snap.recurrence_type,
+        recurrence_interval: snap.recurrence_interval,
+        recurrence_until: snap.recurrence_until,
+        recurrence_parent_id: snap.recurrence_parent_id,
+      });
+      const saved = await this.repo.save(restored);
+      await this.audit.log(saved.id, userId, 'restore');
+      return { action: 'delete', schedule: saved };
+    }
+    const existing = await this.repo.findOne({ where: { id: snap.id, user_id: userId } });
+    if (!existing) {
+      throw new BadRequestException('Lịch đã không còn tồn tại.');
+    }
+    existing.status = snap.status;
+    existing.acknowledged_at = snap.acknowledged_at;
+    const saved = await this.repo.save(existing);
+    await this.audit.log(saved.id, userId, 'restore');
+    return { action: 'complete', schedule: saved };
+  }
+
+  /**
+   * Trả thông tin entry gần nhất (cho UI ẩn/hiện nút Hoàn tác).
+   */
+  peekUndo(userId: string): { action: 'delete' | 'complete'; title: string; expiresAt: number } | null {
+    const entry = this.undoStore.peek(userId);
+    if (!entry) return null;
+    return {
+      action: entry.action,
+      title: entry.snapshot.title,
+      expiresAt: entry.createdAt + 10 * 60 * 1000,
+    };
   }
 
   private groupBy<T>(arr: T[], key: (x: T) => string): Record<string, number> {

@@ -618,7 +618,7 @@ Mẫu file đề xuất (chưa scaffold, nhưng nên thêm sớm):
 - [x] Mobile: tag chips trong schedule card (PR #30) + filter theo tag (Sắp tới)
 - [x] Mobile: stats charts — `/stats` (pure RN bar + segmented, không phụ thuộc lib chart) + nút xuất `.ics` qua `expo-sharing`
 - [~] Backend: import Excel (`xlsx` đã cài) + import/export `.ics` — **export `.ics` xong** (`GET /api/schedules/export.ics`); import Excel/ICS chưa làm
-- [ ] Backend: undo service (xoá / hoàn-thành) trong 10 phút (in-memory)
+- [x] Backend: undo service (xoá / hoàn-thành) trong 10 phút (in-memory) — `POST /api/schedules/undo`, store per-user, cron sweep mỗi phút, web/mobile có nút "Hoàn tác" trên toast/alert
 - [x] Backend: working hours — reminder ngoài khung dồn về đầu khung kế tiếp
 - [x] Health check `/api/health`
 - [ ] Unit + e2e test cover ≥80%
