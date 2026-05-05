@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Calendar,
   AlarmClock,
+  BarChart3,
   ClipboardList,
   LayoutTemplate,
   LogOut,
@@ -31,6 +32,7 @@ const NAV = [
   { href: "/tags", label: "Nhãn", icon: TagIcon },
   { href: "/templates", label: "Mẫu lịch", icon: LayoutTemplate },
   { href: "/shared", label: "Chia sẻ với tôi", icon: Share2 },
+  { href: "/stats", label: "Thống kê", icon: BarChart3 },
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 
