@@ -4,6 +4,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, LessThanOrEqual, Repository } from 'typeorm';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { PushService } from './push.service';
+import {
+  isInsideWorkHours,
+  isWorkHoursConfigured,
+  nextWorkStart,
+  WorkHoursSettings,
+} from './work-hours';
 
 const DEFAULT_REPEAT_MINUTES = 30;
 
@@ -49,6 +55,19 @@ export class RemindersService {
       const repeat = settings?.default_remind_minutes ?? DEFAULT_REPEAT_MINUTES;
       const token = s.user?.expo_push_token;
       const pushEnabled = settings?.notify_via_push ?? true;
+      const wh = settings ? toWorkHours(settings) : undefined;
+      const outsideWorkHours = wh && isWorkHoursConfigured(wh) && !isInsideWorkHours(now, wh);
+
+      if (outsideWorkHours && wh) {
+        // Dồn reminder về đầu khung làm việc kế tiếp, không gửi push lúc này.
+        const deferred = nextWorkStart(now, wh);
+        this.logger.log(
+          `⏸  Hoãn nhắc "${s.title}" tới ${deferred.toISOString()} (ngoài giờ làm việc)`,
+        );
+        await this.schedules.update(s.id, { remind_at: deferred });
+        continue;
+      }
+
       if (token && pushEnabled) {
         await this.push.send([
           {
@@ -98,4 +117,16 @@ export class RemindersService {
       await this.schedules.update(s.id, { end_notified_at: now });
     }
   }
+}
+
+function toWorkHours(settings: {
+  timezone?: string;
+  work_start_hour?: number;
+  work_end_hour?: number;
+}): WorkHoursSettings {
+  return {
+    timezone: settings.timezone ?? 'Asia/Ho_Chi_Minh',
+    work_start_hour: settings.work_start_hour ?? 0,
+    work_end_hour: settings.work_end_hour ?? 0,
+  };
 }

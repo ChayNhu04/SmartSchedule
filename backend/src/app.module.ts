@@ -12,6 +12,7 @@ import { TemplatesModule } from './templates/templates.module';
 import { SharesModule } from './shares/shares.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { AuditModule } from './audit/audit.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuditModule } from './audit/audit.module';
     SharesModule,
     RemindersModule,
     AuditModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

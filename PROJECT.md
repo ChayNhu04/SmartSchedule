@@ -202,7 +202,7 @@ Owner = `schedules.user_id`. Junction `schedule_shares(schedule_id, shared_with_
 
 - `Logger` của NestJS với context per-class.
 - Mọi lỗi runtime trong cron / route đều log `error` + stack.
-- Health check (đề xuất bổ sung): `GET /api/health` qua `@nestjs/terminus`.
+- Health check: `GET /api/health` — trả `{ status, db, uptime_seconds, timestamp }`. Không yêu cầu auth.
 
 ---
 
@@ -317,7 +317,7 @@ schedule_audit_logs
 | POST   | `/api/schedules`                    | Tạo lịch                                                                                                         |
 | GET    | `/api/schedules?status=&priority=&from=&to=&limit=&offset=` | List có filter + paginate                                                              |
 | GET    | `/api/schedules/today`              | Lịch hôm nay (start ∈ [00:00, 23:59:59])                                                                         |
-| GET    | `/api/schedules/upcoming?limit=N`   | N lịch pending sắp tới                                                                                          |
+| GET    | `/api/schedules/upcoming?limit=N&tag_id=ID` | N lịch pending sắp tới (lọc theo `tag_id` nếu có)                                                          |
 | GET    | `/api/schedules/overdue`            | Pending + start < now                                                                                            |
 | GET    | `/api/schedules/search?q=keyword`   | ILIKE title/description                                                                                          |
 | GET    | `/api/schedules/stats?range=tuan\|thang\|nam` | Total, completionRate, byPriority, byType                                                              |
@@ -326,6 +326,11 @@ schedule_audit_logs
 | POST   | `/api/schedules/:id/complete`       | Đánh dấu completed + acknowledged_at = now                                                                       |
 | DELETE | `/api/schedules/:id`                | Xoá hẳn                                                                                                          |
 | GET    | `/api/schedules/:id/history`        | Audit log paginate                                                                                               |
+
+### Health
+| Method | Endpoint        | Mô tả                                                  |
+|--------|-----------------|--------------------------------------------------------|
+| GET    | `/api/health`   | Liveness + DB probe (không cần auth, dùng cho monitor) |
 
 ### Tags
 | Method | Endpoint                                  | Body / Mô tả                            |
@@ -607,23 +612,23 @@ Mẫu file đề xuất (chưa scaffold, nhưng nên thêm sớm):
 - [x] Mobile: 5 tab + login/register
 
 ### v0.2 (gần)
-- [ ] Mobile: detail screen + edit form
-- [ ] Mobile: recurrence picker (UI chọn daily/weekly/monthly + interval + until)
-- [ ] Mobile: tag chips trong schedule card + filter theo tag
+- [x] Mobile: detail screen + edit form (PR #22)
+- [x] Mobile: recurrence picker (UI chọn daily/weekly/monthly + interval + until)
+- [x] Mobile: tag chips trong schedule card (PR #30) + filter theo tag (Sắp tới)
 - [ ] Mobile: stats charts (Victory Native hoặc react-native-svg)
 - [ ] Backend: import Excel (`xlsx` đã cài) + import/export `.ics` (`ical.js`)
 - [ ] Backend: undo service (xoá / hoàn-thành) trong 10 phút (in-memory)
-- [ ] Backend: working hours — reminder ngoài khung dồn về sáng hôm sau
-- [ ] Health check `/api/health`
+- [x] Backend: working hours — reminder ngoài khung dồn về đầu khung kế tiếp
+- [x] Health check `/api/health`
 - [ ] Unit + e2e test cover ≥80%
 
 ### v0.3 (xa)
-- [ ] Quick add tiếng Việt (NLP datetime parser như BotThoiGianBieu)
+- [x] Quick add tiếng Việt (NLP datetime parser) — PR #36
 - [ ] Calendar month view (mobile)
 - [ ] Đa người trong cùng lịch (collaborative edit)
 - [x] Web app (Next.js + Tailwind + shadcn/ui) — đã scaffold
 - [ ] Web: drag-drop trên Calendar để dời giờ
-- [ ] Web: dark mode toggle
+- [x] Web: dark mode toggle
 - [ ] Web: stats charts (Recharts)
 - [ ] Mention / push tới participants khi share
 
