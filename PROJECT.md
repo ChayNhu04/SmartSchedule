@@ -321,6 +321,7 @@ schedule_audit_logs
 | GET    | `/api/schedules/overdue`            | Pending + start < now                                                                                            |
 | GET    | `/api/schedules/search?q=keyword`   | ILIKE title/description                                                                                          |
 | GET    | `/api/schedules/stats?range=tuan\|thang\|nam` | Total, completionRate, byPriority, byType                                                              |
+| GET    | `/api/schedules/export.ics`         | Xuất toàn bộ lịch dạng iCalendar (RFC 5545) — import vào Google/Outlook/Apple Calendar                           |
 | GET    | `/api/schedules/:id`                | Detail (kèm tags)                                                                                                |
 | PATCH  | `/api/schedules/:id`                | Update partial                                                                                                   |
 | POST   | `/api/schedules/:id/complete`       | Đánh dấu completed + acknowledged_at = now                                                                       |
@@ -616,7 +617,7 @@ Mẫu file đề xuất (chưa scaffold, nhưng nên thêm sớm):
 - [x] Mobile: recurrence picker (UI chọn daily/weekly/monthly + interval + until)
 - [x] Mobile: tag chips trong schedule card (PR #30) + filter theo tag (Sắp tới)
 - [ ] Mobile: stats charts (Victory Native hoặc react-native-svg)
-- [ ] Backend: import Excel (`xlsx` đã cài) + import/export `.ics` (`ical.js`)
+- [~] Backend: import Excel (`xlsx` đã cài) + import/export `.ics` — **export `.ics` xong** (`GET /api/schedules/export.ics`); import Excel/ICS chưa làm
 - [ ] Backend: undo service (xoá / hoàn-thành) trong 10 phút (in-memory)
 - [x] Backend: working hours — reminder ngoài khung dồn về đầu khung kế tiếp
 - [x] Health check `/api/health`
@@ -629,7 +630,7 @@ Mẫu file đề xuất (chưa scaffold, nhưng nên thêm sớm):
 - [x] Web app (Next.js + Tailwind + shadcn/ui) — đã scaffold
 - [ ] Web: drag-drop trên Calendar để dời giờ
 - [x] Web: dark mode toggle
-- [ ] Web: stats charts (Recharts)
+- [x] Web: stats charts — `/stats` (CSS bar + segmented progress, không phụ thuộc lib chart)
 - [ ] Mention / push tới participants khi share
 
 ---

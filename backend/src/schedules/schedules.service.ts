@@ -106,6 +106,13 @@ export class SchedulesService {
     });
   }
 
+  allForExport(userId: string) {
+    return this.repo.find({
+      where: { user_id: userId },
+      order: { start_time: 'ASC' },
+    });
+  }
+
   async stats(userId: string, range?: string) {
     const since = new Date();
     if (range === 'tuan') since.setDate(since.getDate() - 7);
