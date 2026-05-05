@@ -400,6 +400,54 @@ export default function SettingsScreen() {
           />
 
           <Pressable
+            onPress={() => router.push("/stats" as never)}
+            style={({ pressed }) => [
+              styles.linkRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+            accessibilityLabel="Mở trang thống kê"
+          >
+            <View
+              style={[
+                styles.linkIconWrap,
+                { backgroundColor: colors.primaryMuted },
+              ]}
+            >
+              <Ionicons
+                name="bar-chart-outline"
+                size={18}
+                color={colors.primary}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.bodyStrong, { color: colors.text }]}>
+                Thống kê
+              </Text>
+              <Text
+                style={[
+                  typography.caption,
+                  { color: colors.textMuted, marginTop: 2 },
+                ]}
+              >
+                Tổng quan lịch theo khung thời gian.
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={colors.textSubtle}
+            />
+          </Pressable>
+
+          <View
+            style={{
+              height: 1,
+              backgroundColor: colors.border,
+              marginVertical: spacing.md,
+            }}
+          />
+
+          <Pressable
             onPress={() => router.push("/shared" as never)}
             style={({ pressed }) => [
               styles.linkRow,
