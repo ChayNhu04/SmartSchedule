@@ -70,21 +70,26 @@ export class SchedulesService {
     return this.repo.find({
       where: { user_id: userId, start_time: Between(start, end) },
       order: { start_time: 'ASC' },
+      relations: ['tags'],
     });
   }
 
-  upcoming(userId: string, limit = 5) {
-    return this.repo.find({
+  async upcoming(userId: string, limit = 5, tagId?: number) {
+    const items = await this.repo.find({
       where: { user_id: userId, status: 'pending', start_time: MoreThanOrEqual(new Date()) },
       order: { start_time: 'ASC' },
-      take: limit,
+      take: tagId ? Math.max(limit * 5, 100) : limit,
+      relations: ['tags'],
     });
+    if (!tagId) return items;
+    return items.filter((s) => s.tags?.some((t) => t.id === tagId)).slice(0, limit);
   }
 
   overdue(userId: string) {
     return this.repo.find({
       where: { user_id: userId, status: 'pending', start_time: LessThan(new Date()) },
       order: { start_time: 'ASC' },
+      relations: ['tags'],
     });
   }
 

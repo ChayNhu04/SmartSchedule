@@ -39,8 +39,16 @@ export class SchedulesController {
   }
 
   @Get('upcoming')
-  upcoming(@CurrentUser() u: { id: string }, @Query('limit') limit?: string) {
-    return this.service.upcoming(u.id, limit ? parseInt(limit, 10) : 5);
+  upcoming(
+    @CurrentUser() u: { id: string },
+    @Query('limit') limit?: string,
+    @Query('tag_id') tagId?: string,
+  ) {
+    return this.service.upcoming(
+      u.id,
+      limit ? parseInt(limit, 10) : 5,
+      tagId ? parseInt(tagId, 10) : undefined,
+    );
   }
 
   @Get('overdue')

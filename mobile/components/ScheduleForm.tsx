@@ -29,6 +29,13 @@ const PRIORITY_OPTIONS = [
   { value: "high", label: "Cao", colorKey: "priorityHigh" as const },
 ] as const;
 
+const RECURRENCE_UNIT_VI: Record<RecurrenceType, string> = {
+  none: "",
+  daily: "ngày",
+  weekly: "tuần",
+  monthly: "tháng",
+};
+
 interface Props {
   initial?: Schedule | null;
   submitLabel: string;
@@ -64,6 +71,16 @@ export function ScheduleForm({ initial, submitLabel, onSubmit }: Props) {
   const [recurrence, setRecurrence] = useState<RecurrenceType>(
     initial?.recurrence_type ?? "none",
   );
+  const [recurrenceInterval, setRecurrenceInterval] = useState<string>(
+    initial?.recurrence_interval && initial.recurrence_interval > 1
+      ? String(initial.recurrence_interval)
+      : "",
+  );
+  const initialUntil = useMemo(
+    () => splitIsoToLocalParts(initial?.recurrence_until ?? null),
+    [initial?.recurrence_until],
+  );
+  const [recurrenceUntilDate, setRecurrenceUntilDate] = useState(initialUntil.date);
   const hasAdvanced =
     !!initial &&
     (!!initial.end_time ||
@@ -102,6 +119,26 @@ export function ScheduleForm({ initial, submitLabel, onSubmit }: Props) {
         return;
       }
     }
+    let intervalNumber: number | undefined;
+    let untilIso: string | undefined;
+    if (advancedOpen && recurrence !== "none") {
+      if (recurrenceInterval.trim()) {
+        const n = parseInt(recurrenceInterval, 10);
+        if (!Number.isFinite(n) || n < 1 || n > 365) {
+          Alert.alert("Khoảng lặp không hợp lệ", "Hãy nhập số nguyên 1-365.");
+          return;
+        }
+        intervalNumber = n;
+      }
+      if (recurrenceUntilDate.trim()) {
+        const iso = combineDateTime(recurrenceUntilDate, "23:59");
+        if (!iso) {
+          Alert.alert("Ngày kết thúc lặp không hợp lệ", "Hãy nhập dạng dd/mm/yyyy.");
+          return;
+        }
+        untilIso = iso;
+      }
+    }
     setLoading(true);
     try {
       const payload: CreateScheduleRequest = {
@@ -113,6 +150,8 @@ export function ScheduleForm({ initial, submitLabel, onSubmit }: Props) {
         priority,
         item_type: advancedOpen ? itemType : undefined,
         recurrence_type: advancedOpen ? recurrence : undefined,
+        recurrence_interval: intervalNumber,
+        recurrence_until: untilIso,
       };
       await onSubmit(payload);
     } catch (err) {
@@ -373,6 +412,28 @@ export function ScheduleForm({ initial, submitLabel, onSubmit }: Props) {
               );
             })}
           </View>
+
+          {recurrence !== "none" && (
+            <View style={{ marginTop: spacing.sm }}>
+              <Input
+                label={`Mỗi (${RECURRENCE_UNIT_VI[recurrence]})`}
+                placeholder="VD: 1"
+                value={recurrenceInterval}
+                onChangeText={(v) => setRecurrenceInterval(v.replace(/[^\d]/g, "").slice(0, 3))}
+                keyboardType="number-pad"
+                hint={`Mặc định 1 ${RECURRENCE_UNIT_VI[recurrence]} một lần. Để trống = 1.`}
+              />
+              <Input
+                label="Lặp đến ngày (tuỳ chọn)"
+                placeholder="dd/mm/yyyy"
+                value={recurrenceUntilDate}
+                onChangeText={(v) => setRecurrenceUntilDate(formatDateInput(v))}
+                keyboardType="number-pad"
+                maxLength={10}
+                hint="Để trống = lặp vô hạn"
+              />
+            </View>
+          )}
         </View>
       )}
 
